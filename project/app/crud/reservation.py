@@ -92,5 +92,18 @@ class CRUDReservation(CRUDBase):
         reservations = reservations.scalars().all()
         return reservations
 
+    async def get_reservations_current(
+        self, session: AsyncSession,
+    ):
+        reservations = await session.execute(
+            select(Reservation).where(
+                #  И время окончания бронирования больше текущего времени
+                Reservation.to_reserve >= datetime.now(),
+                Reservation.from_reserve <= datetime.now()
+            )
+        )
+        reservations = reservations.scalars().all()
+        return reservations
+
 
 reservation_crud = CRUDReservation(Reservation)
