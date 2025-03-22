@@ -55,7 +55,6 @@ async def create_reservation(
 @router.get(
     "/",
     response_model=list[ReservationRoomDB],
-    dependencies=[Depends(current_superuser)],
     summary="Получить список зарезервированных комнат",
     response_description="Список успешно получен",
     description="Получить список зарезервированных комнат",
