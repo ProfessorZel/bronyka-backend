@@ -150,11 +150,37 @@ async def update_reservation(
 async def get_my_reservations(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
+    history: bool = False,
 ):
     """
     Показывает список всех бронирований переговорных комнат для текущего пользователя
     """
-    reservations = await reservation_crud.get_by_user(
-        session=session, user=user
+    reservations = await reservation_crud.get_reservations_for_user(
+        user=user.id, session=session, include_past=history
+    )
+    return reservations
+
+@router.get(
+    "/for-user/{id}",
+    response_model=list[ReservationRoomDB],
+    dependencies=[Depends(current_superuser)],
+    # Добавим множество с полями, которые нужно исключить из ответа
+    response_model_exclude={"user_id"},
+    summary="Время бронирования конкретной переговорной комнаты",
+    response_description="Запрос успешно получен",
+)
+async def get_reservations_for_room(
+    id: int = Path(
+        ...,
+        ge=0,
+        title="ID пользователя",
+        description="Любое положительное число",
+    ),
+    history: bool = False,
+    session: AsyncSession = Depends(get_async_session),
+):
+    # await check_meeting_room_exists(id, session)
+    reservations = await reservation_crud.get_reservations_for_user(
+        user_id=id, session=session, include_past=history
     )
     return reservations

@@ -48,28 +48,49 @@ class CRUDReservation(CRUDBase):
         reservations = reservations.scalars().all()
         return reservations
 
-    async def get_future_reservations_for_room(
-        self, room_id: int, session: AsyncSession
+    async def get_reservations_for_room(
+        self, room_id: int, include_past: bool, session: AsyncSession
     ):
-        reservations = await session.execute(
-            # Получим все объекты Reservation
-            select(Reservation).where(
-                # где id равен запрашиваему room_id
-                Reservation.meetingroom_id == room_id,
-                #  И время окончания бронирования больше текущего времени
-                Reservation.to_reserve > datetime.now(),
+        if include_past:
+            reservations = await session.execute(
+                # Получим все объекты Reservation
+                select(Reservation).where(
+                    # где id равен запрашиваему room_id
+                    Reservation.meetingroom_id == room_id
+                )
             )
-        )
+        else:
+            reservations = await session.execute(
+                # Получим все объекты Reservation
+                select(Reservation).where(
+                    # где id равен запрашиваему room_id
+                    Reservation.meetingroom_id == room_id,
+                    #  И время окончания бронирования больше текущего времени
+                    Reservation.to_reserve > datetime.now()
+                )
+            )
         reservations = reservations.scalars().all()
         return reservations
 
-    async def get_by_user(
-        self, session: AsyncSession, user: User
-    ) -> list[Reservation]:
-        reservations = await session.execute(
-            select(Reservation).where(Reservation.user_id == user.id)
-        )
-        return reservations.scalars().all()
+    async def get_reservations_for_user(
+        self, user_id: int, include_past: bool, session: AsyncSession,
+    ):
+        if include_past:
+            reservations = await session.execute(
+                select(Reservation).where(
+                Reservation.user_id == user_id
+                )
+            )
+        else:
+            reservations = await session.execute(
+                select(Reservation).where(
+                    Reservation.user_id == user_id,
+                    #  И время окончания бронирования больше текущего времени
+                    Reservation.to_reserve > datetime.now()
+                )
+            )
+        reservations = reservations.scalars().all()
+        return reservations
 
 
 reservation_crud = CRUDReservation(Reservation)

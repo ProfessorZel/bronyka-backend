@@ -154,10 +154,11 @@ async def get_reservations_for_room(
         title="ID переговорной комнаты",
         description="Любое положительное число",
     ),
+    history: bool = False,
     session: AsyncSession = Depends(get_async_session),
 ):
     await check_meeting_room_exists(meeting_room_id, session)
-    reservations = await reservation_crud.get_future_reservations_for_room(
-        room_id=meeting_room_id, session=session
+    reservations = await reservation_crud.get_reservations_for_room(
+        room_id=meeting_room_id, session=session, include_past=history
     )
     return reservations
