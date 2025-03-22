@@ -61,12 +61,16 @@ async def create_reservation(
     description="Получить список зарезервированных комнат",
 )
 async def get_all_reservation(
+    current: bool,
     session: AsyncSession = Depends(get_async_session),
 ):
     """
     (Могут воспользоваться только суперпользователи)
     """
-    reservations = await reservation_crud.get_multi(session)
+    if current:
+        reservations = await reservation_crud.get_reservations_current(session)
+    else:
+        reservations = await reservation_crud.get_multi(session)
     return reservations
 
 
