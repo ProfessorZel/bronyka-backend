@@ -159,7 +159,7 @@ async def get_my_reservations(
     Показывает список всех бронирований переговорных комнат для текущего пользователя
     """
     reservations = await reservation_crud.get_reservations_for_user(
-        user=user.id, session=session, include_past=history
+        user_id=user.id, session=session, include_past=history
     )
     return reservations
 
