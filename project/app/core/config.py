@@ -1,4 +1,5 @@
 # app/core/config.py
+import uuid
 from typing import Optional
 from pydantic import BaseSettings, EmailStr
 
@@ -8,7 +9,8 @@ class Settings(BaseSettings):
     app_description: str = "..."
     database_url: str = "sqlite+aiosqlite:///./fastapi.db"
     app_version: str = "1.0.0"
-    secret_key: str = "SECRET4327342343244"
+    # приведет к разлогину при перезагрузке, но надежнее чем статический секрет
+    secret_key: str = str(uuid.uuid4())
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
 
