@@ -1,8 +1,10 @@
 # app/api/validators.py
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
+from app.crud.user import user_crud
 from app.models import MeetingRoom, Reservation, User
 
 
@@ -27,6 +29,16 @@ async def check_meeting_room_exists(
     if meeting_room is None:
         raise HTTPException(status_code=404, detail="Переговорка не найдена")
     return meeting_room
+
+# Корутина, которая проверяет, существует ли объект в БД с таким ID
+async def check_user_exists(
+    user_id: int, session: AsyncSession
+) -> MeetingRoom:
+    # Получаем объект из БД по ID
+    user = await user_crud.get(obj_id=user_id, session=session)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найдена")
+    return user
 
 
 async def check_reservation_intersections(**kwargs) -> None:

@@ -6,7 +6,6 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./data/fastapi.db
       - APP_TITLE=Сервис бронирования
       - SECRET_KEY=${SECRET_KEY}
       - FIRST_SUPERUSER_EMAIL=${FIRST_SUPERUSER_EMAIL}

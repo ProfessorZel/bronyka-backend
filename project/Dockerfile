@@ -1,6 +1,5 @@
 # pull official base image
 FROM python:3.11-slim-buster
-
 # set working directory
 WORKDIR /usr/src/app
 
@@ -20,4 +19,5 @@ RUN pip install -r requirements.txt
 
 # add app
 COPY . .
+ENV DATABASE_URL sqlite+aiosqlite:///./data/fastapi.db
 CMD sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"

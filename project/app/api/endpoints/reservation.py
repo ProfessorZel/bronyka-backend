@@ -2,13 +2,14 @@
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
-from app.core.user import current_user, current_superuser
+from app.core.user import current_user, current_superuser, fastapi_users
 from app.models import User
 from app.crud.reservation import reservation_crud
 from app.api.validators import (
     check_meeting_room_exists,
     check_reservation_intersections,
     check_reservation_before_edit,
+    check_user_exists,
 )
 from app.schemas.reservation import (
     ReservationRoomDB,
@@ -169,10 +170,10 @@ async def get_my_reservations(
     dependencies=[Depends(current_superuser)],
     # Добавим множество с полями, которые нужно исключить из ответа
     response_model_exclude={"user_id"},
-    summary="Время бронирования конкретной переговорной комнаты",
+    summary="Бронирования для конкретного пользователя",
     response_description="Запрос успешно получен",
 )
-async def get_reservations_for_room(
+async def get_reservations_for_user(
     id: int = Path(
         ...,
         ge=0,
@@ -182,7 +183,7 @@ async def get_reservations_for_room(
     history: bool = False,
     session: AsyncSession = Depends(get_async_session),
 ):
-    # await check_meeting_room_exists(id, session)
+    await check_user_exists(user_id=id, session=session)
     reservations = await reservation_crud.get_reservations_for_user(
         user_id=id, session=session, include_past=history
     )
