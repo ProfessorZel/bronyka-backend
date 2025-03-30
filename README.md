@@ -4,7 +4,7 @@
 * Backend - Python (FastAPI), реализует REST-full интерфейс поверх HTTP  (исходный код [bronyka-backend](https://github.com/ProfessorZel/bronyka-backend))
 * Database - sqlite, минималистичная база данных представленная в виде файла
 
-![Архитектура](./Untitled Diagram.drawio.png)
+![Архитектура](./structure.png)
 
 # Подготовка к развертыванию
 Установить следующие продукты:
