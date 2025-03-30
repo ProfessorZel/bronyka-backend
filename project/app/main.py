@@ -19,7 +19,7 @@ app = FastAPI(
 # Подключаем роутер
 app.include_router(main_router)
 
-app.mount("/static", StaticFiles(directory="/usr/src/app/app/static"), name="static")
+app.mount("/assets", StaticFiles(directory="/usr/src/app/app/assets"), name="static")
 @app.get("/")
 async def read_index():
     return FileResponse('/usr/src/app/app/index.html')

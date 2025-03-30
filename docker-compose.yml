@@ -2,11 +2,13 @@ services:
   web:
     build: ./project
     volumes:
-      - ./data:/usr/src/app/data/
+      - ${DATA_FOLDER}:/usr/src/app/data/
     ports:
-      - 8000:8000
+
+      - ${PUBLIC_PORT}:8000
     environment:
-      - APP_TITLE=Сервис бронирования
+      # ${...} - параметры извлекаемые из .env файла
+      - APP_TITLE=${APP_TITLE}
       - SECRET_KEY=${SECRET_KEY}
       - FIRST_SUPERUSER_EMAIL=${FIRST_SUPERUSER_EMAIL}
       - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
