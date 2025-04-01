@@ -14,6 +14,12 @@ TO_TIME = (datetime.now() + timedelta(hours=10)).isoformat(timespec="minutes")
 class ReservationRoomBase(BaseModel):
     from_reserve: datetime = Field(..., example=FROM_TIME)
     to_reserve: datetime = Field(..., example=TO_TIME)
+    user_id: Optional[str] = Field(
+        None,
+        description="ID пользователя, для которого создается бронь",
+        example="1",
+        nullable=True
+    )
 
     class Config:
         # Запрещает передавать параметры, которые не будут описаны в схеме
@@ -28,6 +34,12 @@ class ReservationRoomUpdate(ReservationRoomBase):
                 "Время начала бронирования не "
                 "может быть меньше текущего времени"
             )
+        return value
+
+    @validator("user_id")
+    def check_user_id_not_empty(cls, value):
+        if value is not None and value.strip() == "":
+            raise ValueError("Пользователь на которого назначают бронь не может быть пустым")
         return value
 
     @root_validator(skip_on_failure=True)

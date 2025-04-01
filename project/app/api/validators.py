@@ -40,7 +40,7 @@ async def check_user_exists(
     # Получаем объект из БД по ID
     user = await user_crud.get(obj_id=user_id, session=session)
     if user is None:
-        raise HTTPException(status_code=404, detail="Пользователь не найдена")
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
     return user
 
 
