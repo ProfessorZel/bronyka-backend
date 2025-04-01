@@ -103,7 +103,7 @@ async def partially_update_meeting_room(
     if obj_in.name is not None:
         # Если в переданных данных, есть поле name
         # проверяем его на уникальность
-        await check_name_duplicate(obj_in.name, session)
+        await check_name_duplicate(obj_in.name, session, previous_room_id=meeting_room_id)
 
     # Когда проверки завершены - передаём в корутину
     # все необходимые для обновления данные

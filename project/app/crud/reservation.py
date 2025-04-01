@@ -96,7 +96,9 @@ class CRUDReservation(CRUDBase):
                 # Получим все объекты Reservation
                 select(Reservation).where(
                     # где id равен запрашиваему room_id
-                    Reservation.meetingroom_id == room_id
+                    Reservation.meetingroom_id == room_id,
+
+                    Reservation.to_reserve < datetime.now()
                 )
             )
         else:
@@ -106,7 +108,7 @@ class CRUDReservation(CRUDBase):
                     # где id равен запрашиваему room_id
                     Reservation.meetingroom_id == room_id,
                     #  И время окончания бронирования больше текущего времени
-                    Reservation.to_reserve > datetime.now()
+                    Reservation.to_reserve >= datetime.now()
                 )
             )
         reservations = reservations.scalars().all()
@@ -118,7 +120,9 @@ class CRUDReservation(CRUDBase):
         if include_past:
             reservations = await session.execute(
                 select(Reservation).where(
-                Reservation.user_id == user_id
+                Reservation.user_id == user_id,
+                    #  И время окончания бронирования больше текущего времени
+                    Reservation.to_reserve < datetime.now()
                 )
             )
         else:
@@ -126,7 +130,7 @@ class CRUDReservation(CRUDBase):
                 select(Reservation).where(
                     Reservation.user_id == user_id,
                     #  И время окончания бронирования больше текущего времени
-                    Reservation.to_reserve > datetime.now()
+                    Reservation.to_reserve >= datetime.now()
                 )
             )
         reservations = reservations.scalars().all()
