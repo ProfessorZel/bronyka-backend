@@ -7,3 +7,6 @@ from app.core.db import Base
 class User(SQLAlchemyBaseUserTable[int], Base):
     fio = Column(String, nullable=False)
     birthdate = Column(DateTime)
+
+    def __repr__(self) -> str:
+        return f"(id: {self.id}) {self.fio}"

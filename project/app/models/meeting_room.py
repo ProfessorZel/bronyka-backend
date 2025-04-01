@@ -14,3 +14,6 @@ class MeetingRoom(Base):
     # В relationship прописываем строку, а не передаём класс - иначе, в случае
     # двухстороннего доступа от модели к модели будут циклические импорты
     reservations = relationship("Reservation", cascade="delete")
+
+    def __repr__(self) -> str:
+        return f"(id: {self.id}) {self.name} ({self.description})"

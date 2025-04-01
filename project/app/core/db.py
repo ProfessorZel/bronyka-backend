@@ -25,7 +25,7 @@ engine = create_async_engine(settings.database_url)
 # Для работы, нужно постоянно открывать и закрывать
 # сессии (для каждого запроса), поэтому применим
 # функцию sessionmaker
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession)
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Асинхронный генератор сессий
 async def get_async_session():

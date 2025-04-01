@@ -12,4 +12,4 @@ class Reservation(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
 
     def __repr__(self) -> str:
-        return f"Уже забронировано с {self.from_reserve} по {self.to_reserve}"
+        return f"(id: {self.id}) компьютер {self.meetingroom_id} с {self.from_reserve} по {self.to_reserve} для пользователя {self.user_id} "

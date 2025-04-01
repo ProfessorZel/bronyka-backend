@@ -3,10 +3,13 @@ from typing import List
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
-from app.core.user import current_superuser
+from app.core.user import current_superuser, current_user
+from app.crud.audit import audit_crud
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
 from app.api.validators import check_meeting_room_exists, check_name_duplicate
+from app.models import User
+from app.schemas.audit import AuditCreate
 from app.schemas.reservation import ReservationRoomDB
 from app.schemas.meeting_room import (
     MeetingRoomCreate,
@@ -87,6 +90,7 @@ async def partially_update_meeting_room(
     # JSON-данные, которые отправил пользователь
     obj_in: MeetingRoomUpdate,
     session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_user),
 ):
     """
     (Могут пользоваться только суперпользователи)
@@ -95,7 +99,7 @@ async def partially_update_meeting_room(
     - **name** = Название комнаты
     - **description** = Описание комнаты
     """
-    meeting_room = await check_meeting_room_exists(meeting_room_id, session)
+    meeting_room_before = await check_meeting_room_exists(meeting_room_id, session)
     if obj_in.name is not None:
         # Если в переданных данных, есть поле name
         # проверяем его на уникальность
@@ -104,8 +108,18 @@ async def partially_update_meeting_room(
     # Когда проверки завершены - передаём в корутину
     # все необходимые для обновления данные
     meeting_room = await meeting_room_crud.update(
-        meeting_room, obj_in, session
+        meeting_room_before, obj_in, session
     )
+
+    # создаем аудит
+    event = AuditCreate(
+        description="Обновлен компьютер {0}, было: {1}, стало: {2}".format(
+            meeting_room.id,
+            meeting_room_before,
+            meeting_room
+        ),
+    )
+    await audit_crud.create(event, session, user)
     return meeting_room
 
 
@@ -126,6 +140,7 @@ async def remove_meeting_room(
         description="Любое положительное число",
     ),
     session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_user),
 ):
     """
     (Могут пользоваться только суперпользователи)
@@ -135,6 +150,16 @@ async def remove_meeting_room(
     """
     meeting_room = await check_meeting_room_exists(meeting_room_id, session)
     meeting_room = await meeting_room_crud.remove(meeting_room, session)
+
+    # создаем аудит
+    event = AuditCreate(
+        description="Удален компьютер {0}, было: {1}".format(
+            meeting_room.id,
+            meeting_room
+        ),
+    )
+    await audit_crud.create(event, session, user)
+
     return meeting_room
 
 

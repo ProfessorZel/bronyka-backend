@@ -1,23 +1,27 @@
 # app/api/endpoints/reservation.py
-from fastapi import APIRouter, Depends, Path, HTTPException
+import datetime
+
+from fastapi import APIRouter, Depends, Path
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_async_session
-from app.core.user import current_user, current_superuser, fastapi_users, get_user_manager
-from app.models import User
-from app.crud.reservation import reservation_crud
+
 from app.api.validators import (
     check_meeting_room_exists,
     check_reservation_intersections,
     check_reservation_before_edit,
     check_user_exists,
 )
+from app.core.db import get_async_session
+from app.core.user import current_user, current_superuser, get_user_manager
+from app.crud.audit import audit_crud
+from app.crud.reservation import reservation_crud
+from app.models import User, AuditEvent
+from app.schemas.audit import AuditCreate
 from app.schemas.reservation import (
     ReservationRoomDB,
     ReservationRoomUpdate,
     ReservationRoomCreate,
 )
-from typing import Optional
-
 
 router = APIRouter()
 
@@ -43,12 +47,12 @@ async def create_reservation(
     - **from_reserve** = Дата начала бронирования. Формата 2022-12-14T23:06
     - **to_reserve** = Дата окончания бронирования. Формата 2022-12-15T08:56
     - **meetingroom_id** = Целое число. ID переговорной комнаты
-    - **user_id** = Опциональное поле. ID пользователя, для которого создается бронь. 
-      Если указано, то пользователь должен быть суперпользователем. 
+    - **user_id** = Опциональное поле. ID пользователя, для которого создается бронь.
+      Если указано, то пользователь должен быть суперпользователем.
       Если не указано, то бронь создается для текущего пользователя.
     """
     await check_meeting_room_exists(reservation.meetingroom_id, session)
-    
+
     # Определяем, для какого пользователя создаем бронь
     reservation_user = user
     if reservation.user_id is not None:
@@ -71,8 +75,17 @@ async def create_reservation(
         user_id=reservation_user.id,
         session=session
     )
-    
+
     new_reservation = await reservation_crud.create(reservation, session, reservation_user)
+
+    # создаем аудит
+    event = AuditCreate(
+        description="Создано бронирование: {0}".format(
+            new_reservation
+        )
+    )
+    await audit_crud.create(event, session, user)
+
     return new_reservation
 
 
@@ -122,6 +135,15 @@ async def delete_reservation(
         reservation_id, session, user
     )
     reservation = await reservation_crud.remove(reservation, session)
+
+    # создаем аудит
+    event = AuditCreate(
+        description="Удалено бронирование: {0}".format(
+            reservation
+        )
+    )
+    await audit_crud.create(event, session, user)
+
     return reservation
 
 
@@ -150,8 +172,8 @@ async def update_reservation(
     - **from_reserve** = Дата начала бронирования. Формата 2022-12-14T23:06
     - **to_reserve** = Дата окончания бронирования. Формата 2022-12-15T08:56
     - **reservation_id** = Целое число. ID резервирования
-    - **user_id** = Опциональное поле. ID пользователя, для которого изменяется бронь. 
-      Если указано, то пользователь должен быть суперпользователем. 
+    - **user_id** = Опциональное поле. ID пользователя, для которого изменяется бронь.
+      Если указано, то пользователь должен быть суперпользователем.
       Если не указано, то бронь изменяется для текущего пользователя.
     """
     # Определяем, для какого пользователя изменяем бронь
@@ -168,22 +190,34 @@ async def update_reservation(
         reservation_user = await user_manager.get(obj_in.user_id)
 
     # Проверяем, что объект бронирования уже существует
-    reservation = await check_reservation_before_edit(
+    reservation_before = await check_reservation_before_edit(
         reservation_id, session, reservation_user
     )
+
     # Проверяем, что нет пересечений с другими бронированиями
     await check_reservation_intersections(
         # Новое время бронирования, распаковываем на ключевые аргументы
         from_reserve=obj_in.from_reserve,
         to_reserve=obj_in.to_reserve,
         reservation_id=reservation_id,
-        meetingroom_id=reservation.meetingroom_id,
+        meetingroom_id=reservation_before.meetingroom_id,
         user_id=reservation_user.id,
         session=session,
     )
     reservation = await reservation_crud.update(
-        db_obj=reservation, obj_in=obj_in, session=session
+        db_obj=reservation_before, obj_in=obj_in, session=session
     )
+
+    # создаем аудит
+    event = AuditCreate(
+        description="Изменено бронирование {0}, было: {1}, стало: {2}".format(
+            reservation.id,
+            reservation_before,
+            reservation
+        ),
+    )
+    await audit_crud.create(event, session, user)
+
     return reservation
 
 

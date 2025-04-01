@@ -51,6 +51,9 @@ class ReservationRoomUpdate(ReservationRoomBase):
             )
         return values
 
+    def __repr__(self) -> str:
+        return f"(id: {self.id}) тот-же компьютер с {self.from_reserve} по {self.to_reserve} для пользователя {self.user_id} "
+
 
 # наследуемся от ReservationRoomUpdate с его валидаторами
 class ReservationRoomCreate(ReservationRoomUpdate):
