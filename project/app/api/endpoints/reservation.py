@@ -46,9 +46,13 @@ async def create_reservation(
     await check_reservation_intersections(
         # Т.к. валидатор принимает **kwargs, аргументы нужно передать
         # с указанием ключей
-        **reservation.dict(),
-        session=session,
+        from_reserve=reservation.from_reserve,
+        to_reserve=reservation.to_reserve,
+        meetingroom_id=reservation.meetingroom_id,
+        user_id=user.id,
+        session=session
     )
+
     new_reservation = await reservation_crud.create(reservation, session, user)
     return new_reservation
 
@@ -134,9 +138,11 @@ async def update_reservation(
     # Проверяем, что нет пересечений с другими бронированиями
     await check_reservation_intersections(
         # Новое время бронирования, распаковываем на ключевые аргументы
-        **obj_in.dict(),
+        from_reserve=obj_in.from_reserve,
+        to_reserve=obj_in.to_reserve,
         reservation_id=reservation_id,
-        meetingroom_id=reservation.meetingroom_id,
+        meetingroom_id=obj_in.meetingroom_id,
+        user_id=obj_in.user_id,
         session=session,
     )
     reservation = await reservation_crud.update(

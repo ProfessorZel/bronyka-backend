@@ -1,4 +1,7 @@
 # app/api/validators.py
+from datetime import datetime
+from typing import Optional
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,12 +44,34 @@ async def check_user_exists(
     return user
 
 
-async def check_reservation_intersections(**kwargs) -> None:
-    reservation = await reservation_crud.get_reservations_at_the_same_time(
-        **kwargs
+async def check_reservation_intersections(
+        from_reserve: datetime,
+        to_reserve: datetime,
+        meetingroom_id: int,
+        user_id: int,
+        session: AsyncSession,
+        reservation_id: Optional[int] = None,
+) -> None:
+    reservation = await reservation_crud.get_room_reservations_at_the_same_time(
+        from_reserve = from_reserve,
+        to_reserve=to_reserve,
+        meetingroom_id=meetingroom_id,
+        session=session,
+        reservation_id=reservation_id
     )
     if reservation:
-        raise HTTPException(status_code=422, detail=str(reservation))
+        raise HTTPException(status_code=422, detail="Двойное бронирование одной комнаты, уже есть бронь:"+str(reservation))
+
+    reservation = await reservation_crud.get_user_reservations_at_the_same_time(
+        from_reserve = from_reserve,
+        to_reserve=to_reserve,
+        user_id=user_id,
+        session=session,
+        reservation_id=reservation_id
+    )
+    if reservation:
+        raise HTTPException(status_code=422, detail="Двойное бронирование одним человеком, уже есть бронь:"+str(reservation))
+
 
 
 async def check_reservation_before_edit(
