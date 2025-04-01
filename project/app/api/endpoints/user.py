@@ -24,8 +24,6 @@ router.include_router(
     dependencies=[Depends(current_superuser)],
 )
 
-
-
 users_router = fastapi_users.get_users_router(
     UserRead,
     UserUpdate,
