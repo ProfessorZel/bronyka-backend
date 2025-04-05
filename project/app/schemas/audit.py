@@ -3,6 +3,8 @@ from typing import Optional, Any
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Extra, root_validator, validator, Field
 
+from app.schemas.user import UserRead
+
 TIME = (datetime.now()).isoformat(
     timespec="minutes"
 )
@@ -15,6 +17,11 @@ class AuditBase(BaseModel):
         None,
         description="ID пользователя выолнившего действие",
         example="1",
+        nullable=True
+    )
+    user: Optional[UserRead] = Field(
+        None,
+        description="пользователь",
         nullable=True
     )
     class Config:

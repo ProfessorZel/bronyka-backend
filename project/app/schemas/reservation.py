@@ -3,6 +3,8 @@ from typing import Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Extra, root_validator, validator, Field
 
+from app.schemas.meeting_room import MeetingRoomDB
+from app.schemas.user import UserRead
 
 FROM_TIME = (datetime.now() + timedelta(minutes=10)).isoformat(
     timespec="minutes"
@@ -67,7 +69,13 @@ class ReservationRoomCreate(ReservationRoomUpdate):
 class ReservationRoomDB(ReservationRoomBase):
     id: int
     meetingroom_id: int
+    meetingroom: Optional[MeetingRoomDB]
     user_id: Optional[int]
+    user: Optional[UserRead] = Field(
+        None,
+        description="пользователь",
+        nullable=True
+    )
 
     # разрешим сериализацию объектов из БД
     class Config:
