@@ -1,6 +1,7 @@
 # app/api/validators.py
-from datetime import datetime
 from typing import Optional
+from datetime import datetime, timedelta
+from app.core.config import settings
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,7 @@ from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
 from app.crud.user import user_crud
 from app.models import MeetingRoom, Reservation, User
+
 
 
 # Корутина, которая проверяет уникальность имени переговорной
@@ -88,5 +90,15 @@ async def check_reservation_before_edit(
         raise HTTPException(
             status_code=403,
             detail="Невозможно редактировать или удалять чужую бронь!",
+        )
+    if reservation.to_reserve < datetime.now() and not user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail="Нельзя удалять/изменять бронь после ее завершения, это может сделать только Администратор",
+        )
+    if reservation.from_reserve < datetime.now() - timedelta(minutes = settings.deny_cancel_after_minutes_used) and not user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Нельзя удалять/изменять бронь через {settings.deny_cancel_after_minutes_used} минут после ее начала, это может сделать только Администратор",
         )
     return reservation

@@ -8,7 +8,8 @@ services:
       - ${PUBLIC_PORT}:8000
     environment:
       # ${...} - параметры извлекаемые из .env файла
-      - APP_TITLE=${APP_TITLE}
       - SECRET_KEY=${SECRET_KEY}
       - FIRST_SUPERUSER_EMAIL=${FIRST_SUPERUSER_EMAIL}
       - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
+      - DENY_CANCEL_AFTER_MINUTES_USED=${DENY_CANCEL_AFTER_MINUTES_USED}
+      - TZ=${TZ}

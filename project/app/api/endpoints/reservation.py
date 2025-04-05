@@ -1,6 +1,4 @@
 # app/api/endpoints/reservation.py
-import datetime
-
 from fastapi import APIRouter, Depends, Path
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession

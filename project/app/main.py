@@ -1,4 +1,8 @@
 # app/main.py
+from datetime import datetime
+import logging
+import os
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -27,3 +31,8 @@ async def read_index():
 @app.on_event("startup")
 async def startup():
     await create_first_superuser()
+    await check_tz()
+
+async def check_tz():
+    logging.log(logging.WARN, f"Current time:{datetime.now()}; TimeZone: {os.environ['TZ']};")
+    logging.log(logging.WARN, settings)

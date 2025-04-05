@@ -14,9 +14,9 @@ class Settings(BaseSettings):
     secret_key: str = str(uuid.uuid4())
     first_superuser_email: Optional[str] = None
     first_superuser_password: Optional[str] = None
+    deny_cancel_after_minutes_used: int = 10
 
     class Config:
         env_file = ".env"
-
 
 settings = Settings()
