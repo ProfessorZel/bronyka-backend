@@ -111,7 +111,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.meetingroom_id == room_id,
                     #  И время окончания бронирования больше текущего времени
                     Reservation.to_reserve >= datetime.now()
-                ).order_by(Reservation.from_reserve.acs())
+                ).order_by(Reservation.from_reserve)
             )
         reservations = reservations.scalars().all()
         return reservations
@@ -133,7 +133,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.user_id == user_id,
                     #  И время окончания бронирования больше текущего времени
                     Reservation.to_reserve >= datetime.now()
-                ).order_by(Reservation.from_reserve.asc())
+                ).order_by(Reservation.from_reserve)
             )
         reservations = reservations.scalars().all()
         return reservations
