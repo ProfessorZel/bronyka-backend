@@ -1,7 +1,8 @@
 # app/schemas/reservation.py
-from typing import Optional, Any
-from datetime import datetime, timedelta
-from pydantic import BaseModel, Extra, root_validator, validator, Field
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Extra, Field
 
 from app.schemas.user import UserRead
 

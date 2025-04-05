@@ -1,10 +1,12 @@
 # app/crud/reservation.py
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import and_, between, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.crud.base import CRUDBase
-from app.models import User, Reservation
+from app.models import Reservation
 
 
 class CRUDReservation(CRUDBase):
@@ -99,7 +101,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.meetingroom_id == room_id,
 
                     Reservation.to_reserve < datetime.now()
-                )
+                ).order_by(Reservation.from_reserve.desc())
             )
         else:
             reservations = await session.execute(
@@ -109,7 +111,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.meetingroom_id == room_id,
                     #  И время окончания бронирования больше текущего времени
                     Reservation.to_reserve >= datetime.now()
-                )
+                ).order_by(Reservation.from_reserve.acs())
             )
         reservations = reservations.scalars().all()
         return reservations
@@ -123,7 +125,7 @@ class CRUDReservation(CRUDBase):
                 Reservation.user_id == user_id,
                     #  И время окончания бронирования больше текущего времени
                     Reservation.to_reserve < datetime.now()
-                )
+                ).order_by(Reservation.from_reserve.desc())
             )
         else:
             reservations = await session.execute(
@@ -131,7 +133,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.user_id == user_id,
                     #  И время окончания бронирования больше текущего времени
                     Reservation.to_reserve >= datetime.now()
-                )
+                ).order_by(Reservation.from_reserve.asc())
             )
         reservations = reservations.scalars().all()
         return reservations
@@ -144,7 +146,7 @@ class CRUDReservation(CRUDBase):
                 #  И время окончания бронирования больше текущего времени
                 Reservation.to_reserve >= datetime.now(),
                 Reservation.from_reserve <= datetime.now()
-            )
+            ).order_by(Reservation.from_reserve.desc())
         )
         reservations = reservations.scalars().all()
         return reservations

@@ -13,7 +13,7 @@ from app.core.db import get_async_session
 from app.core.user import current_user, current_superuser, get_user_manager
 from app.crud.audit import audit_crud
 from app.crud.reservation import reservation_crud
-from app.models import User, AuditEvent
+from app.models import User
 from app.schemas.audit import AuditCreate
 from app.schemas.reservation import (
     ReservationRoomDB,
