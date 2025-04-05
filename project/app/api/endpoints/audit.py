@@ -17,7 +17,6 @@ router = APIRouter()
     dependencies=[Depends(current_superuser)],
     summary="Аудит системы",
     response_description="Запрос успешно получен",
-    tags=["audit"],
 )
 async def list_audit_events(
     session: AsyncSession = Depends(get_async_session),
@@ -30,7 +29,6 @@ async def list_audit_events(
     dependencies=[Depends(current_superuser)],
     summary="Очистка старых событий системы",
     response_description="Запрос успешно получен",
-    tags=["audit"],
 )
 async def list_audit_events(
     session: AsyncSession = Depends(get_async_session),
