@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Extra, root_validator, validator, Field
 
+from app.core.config import settings
 from app.schemas.meeting_room import MeetingRoomDB
 from app.schemas.user import UserRead
 
@@ -31,7 +32,7 @@ class ReservationRoomBase(BaseModel):
 class ReservationRoomUpdate(ReservationRoomBase):
     @validator("from_reserve")
     def check_from_reserve_later_than_now(cls, value):
-        if value <= datetime.now():
+        if value <= datetime.now() - timedelta(seconds=settings.backdate_reservation_allowed_seconds):
             raise ValueError(
                 "Время начала бронирования не "
                 "может быть меньше текущего времени"
@@ -50,6 +51,10 @@ class ReservationRoomUpdate(ReservationRoomBase):
             raise ValueError(
                 "Время начала бронирования, "
                 "не может быть больше его окончания"
+            )
+        if values["to_reserve"] - values["from_reserve"] > timedelta(minutes=settings.max_reservation_duration_minutes):
+            raise ValueError(
+                f"Бронирование не может быть дольше {settings.max_reservation_duration_minutes} минут"
             )
         return values
 
