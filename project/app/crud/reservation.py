@@ -1,8 +1,8 @@
 # app/crud/reservation.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import and_, between, or_, select
+from sqlalchemy import and_, between, or_, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -151,5 +151,16 @@ class CRUDReservation(CRUDBase):
         reservations = reservations.scalars().all()
         return reservations
 
+    async def remove_older(
+            self,
+            session: AsyncSession,
+            days: int,
+    ):
+         await session.execute(
+            delete(Reservation).where(
+                    Reservation.to_reserve <= datetime.now() - timedelta(days=days),
+            )
+         )
+         await session.commit()
 
 reservation_crud = CRUDReservation(Reservation)

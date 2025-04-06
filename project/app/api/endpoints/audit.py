@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.user import current_superuser
 from app.crud.audit import audit_crud
+from app.crud.reservation import reservation_crud
 from app.schemas.audit import AuditBase
 
 router = APIRouter()
@@ -21,7 +22,7 @@ router = APIRouter()
 async def list_audit_events(
     session: AsyncSession = Depends(get_async_session),
 ):
-    events = await audit_crud.get_multi(session=session)
+    events = await audit_crud.get_all(session=session)
     return events
 
 @router.post(
@@ -35,3 +36,4 @@ async def list_audit_events(
         days_after: int = 45
 ):
     await audit_crud.remove_older(session=session, days=days_after)
+    await reservation_crud.remove_older(session=session, days=days_after)
