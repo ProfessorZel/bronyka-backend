@@ -37,6 +37,8 @@ PUBLIC_PORT=8000
 DATA_FOLDER=./data
 # через сколько времени редактирование доступно только администратору
 DENY_CANCEL_AFTER_MINUTES_USED=5
+# время жизни сессии пользователя в секундах
+AUTH_TOKEN_LIFETIME_SECONDS=86400
 # временная зона сервера
 TZ=Europe/Moscow
 ```

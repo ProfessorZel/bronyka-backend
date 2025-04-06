@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     first_superuser_email: Optional[str] = None
     first_superuser_password: Optional[str] = None
     deny_cancel_after_minutes_used: int = 10
+    auth_token_lifetime_seconds:int = 86400
 
     class Config:
         env_file = ".env"

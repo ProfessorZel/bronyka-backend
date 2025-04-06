@@ -16,10 +16,10 @@ from fastapi_users.authentication import (
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.db import get_async_session
 from app.models.user import User
 from app.schemas.user import UserCreate
+from app.core.config import settings
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
@@ -35,7 +35,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 def get_jwt_strategy() -> JWTStrategy:
     # Для генерации токена, передаём секретный ключи
     # и срок действия токена в секундах
-    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=3600)
+    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=settings.auth_token_lifetime)
 
 
 # Создаём объект бэкенда аутентификации с выбранными параметрами
