@@ -35,7 +35,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 def get_jwt_strategy() -> JWTStrategy:
     # Для генерации токена, передаём секретный ключи
     # и срок действия токена в секундах
-    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=settings.auth_token_lifetime)
+    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=settings.auth_token_lifetime_seconds)
 
 
 # Создаём объект бэкенда аутентификации с выбранными параметрами
