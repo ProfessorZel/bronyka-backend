@@ -1,6 +1,8 @@
 services:
   web:
     build: ./project
+    env_file:
+      - .env
     volumes:
       - ${DATA_FOLDER}:/usr/src/app/data/
     ports:

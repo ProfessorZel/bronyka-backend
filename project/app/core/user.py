@@ -1,25 +1,31 @@
 # app/core/user.py
-from typing import Optional, Union
+import logging
+import secrets
+import ssl
+from typing import Optional, Union, Callable
 
+from app.core.config import settings
+from app.core.db import get_async_session
+from app.models.user import User
+from app.schemas.user import UserCreate
+from app.schemas.user import UserUpdate
 from fastapi import Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import (
     BaseUserManager,
     FastAPIUsers,
     IntegerIDMixin,
-    InvalidPasswordException,
-)
+    InvalidPasswordException, models, )
 from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
     JWTStrategy,
 )
+from fastapi_users.exceptions import UserNotExists
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from ldap3 import Server, Connection, ALL, Tls
+from ldap3.core.exceptions import LDAPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.db import get_async_session
-from app.models.user import User
-from app.schemas.user import UserCreate
-from app.core.config import settings
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
@@ -50,7 +56,7 @@ auth_backend = AuthenticationBackend(
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     # Опишем свои условия валидации пароля
     async def validate_password(
-        self, password: str, user: Union[UserCreate, User]
+            self, password: str, user: Union[UserCreate, User]
     ) -> None:
         if len(password) < 3:
             raise InvalidPasswordException(reason="Слишком короткий пароль")
@@ -61,10 +67,121 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     # Переопределим корутину для действия после успешной регистрации юзера
     async def on_after_register(
-        self, user: User, request: Optional[Request] = None
+            self, user: User, request: Optional[Request] = None
     ):
         # Вместо print можно настроить отправку письма, например
         print(f"Пользователь {user.email} зарегистрирован!")
+
+    async def authenticate(
+            self, credentials: OAuth2PasswordRequestForm
+    ) -> Optional[models.UP]:
+        if credentials is None:
+            return None
+
+        # Пробуем аутентифицировать через LDAP
+        user = await self.authenticate_with_ldap(credentials)
+        return user
+
+    async def authenticate_with_ldap(
+            self, credentials: OAuth2PasswordRequestForm
+    ) -> Optional[User]:
+        """Аутентификация пользователя через LDAP"""
+        username = credentials.username
+        password = credentials.password
+
+        logging.error(f"LDAP AUTH: Started for {username}")
+
+        if not username or not password:
+            logging.error("LDAP AUTH: No username or password")
+            return None
+
+        try:
+            # Конфигурация LDAP из настроек
+            tls_configuration = Tls(validate=ssl.CERT_REQUIRED) if settings.LDAP_USE_SSL else None
+            server = Server(
+                settings.LDAP_SERVER,
+                port=settings.LDAP_PORT,
+                use_ssl=settings.LDAP_USE_SSL,
+                tls=tls_configuration,
+                get_info=ALL
+            )
+
+            # Поиск пользователя в LDAP
+            search_conn = Connection(
+                server,
+                user=settings.LDAP_BIND_DN,
+                password=settings.LDAP_BIND_PASSWORD,
+                auto_bind=True
+            )
+
+            search_filter = settings.LDAP_USER_SEARCH_FILTER.format(username=username)
+            search_conn.search(
+                search_base=settings.LDAP_USER_SEARCH_BASE,
+                search_filter=search_filter,
+                attributes=settings.LDAP_USER_ATTRIBUTES
+            )
+
+            if not search_conn.entries:
+                logging.error("LDAP AUTH:No entries found")
+                return None
+
+            user_entry = search_conn.entries[0]
+            user_dn = user_entry.entry_dn
+
+            # Аутентификация пользователя
+            auth_conn = Connection(server, user=user_dn, password=password)
+            if not auth_conn.bind():
+                logging.error("LDAP AUTH: Binding failed")
+                return None
+            # Извлечение данных пользователя
+            email = getattr(user_entry, settings.LDAP_EMAIL_ATTRIBUTE, None).value
+            fio = getattr(user_entry, settings.LDAP_FIO_ATTRIBUTE, None).value
+            if not email:
+                logging.error("LDAP AUTH: Email attribute not found")
+                return None
+
+            email = email + settings.LDAP_EMAIL_SUFFIX
+            logging.error(f"LDAP AUTH: Email is '{email}'")
+
+            super_user = False
+            if 'memberOf' in user_entry:
+                group_dns = user_entry['memberOf'].value
+                for group_dn in group_dns:
+                    if group_dn == settings.LDAP_ADMIN_GROUP:
+                        super_user = True
+                        break
+
+
+            # Поиск или создание пользователя в БД
+            try:
+                user = await self.get_by_email(email)
+            except UserNotExists:
+                user = None
+
+            if not user:
+                # Создаем пользователя с флагом LDAP
+                user = await self.create(
+                    UserCreate(
+                        email=email,
+                        is_active=True,
+                        is_superuser=False,
+                        password=secrets.token_urlsafe(32),
+                        fio=fio,
+                    )
+                )
+
+            if user.is_superuser != super_user:
+                await self.update(UserUpdate(is_superuser=super_user), user, False)
+
+            return user
+
+        except LDAPException as e:
+            print(f"LDAP error: {e}")
+            logging.error(f"LDAP AUTH: {e}")
+            return None
+        finally:
+            if 'search_conn' in locals() and search_conn.bound:
+                search_conn.unbind()
 
 
 # Корутина возвращающая объект класса UserManager
