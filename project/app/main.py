@@ -31,7 +31,7 @@ async def read_index():
 
 @app.on_event("startup")
 async def startup():
-    await create_first_superuser()
+    #await create_first_superuser()
     await check_tz()
 
 async def check_tz():
