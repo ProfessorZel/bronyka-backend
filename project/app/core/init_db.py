@@ -22,7 +22,6 @@ async def create_user(
     email: EmailStr,
     password: str,
     fio: str,
-    birthdate: datetime.date,
     is_superuser: bool = False,
 ):
     try:
@@ -39,7 +38,6 @@ async def create_user(
                             password=password,
                             is_superuser=is_superuser,
                             fio=fio,
-                            birthdate=birthdate,
                         )
                     )
     # В случае, если такой пользователь уже есть, ничего не предпринимать.
@@ -59,5 +57,4 @@ async def create_first_superuser():
             password=settings.first_superuser_password,
             is_superuser=True,
             fio="Administrator",
-            birthdate=datetime.datetime.now(),
         )

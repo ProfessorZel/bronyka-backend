@@ -4,7 +4,9 @@ from app.api.endpoints import (
     meeting_room_router,
     reservation_router,
     user_router,
-    audit_router
+    audit_router,
+    files_router,
+    group_router,
 )
 
 main_router = APIRouter()
@@ -18,3 +20,7 @@ main_router.include_router(
 main_router.include_router(user_router)
 
 main_router.include_router(audit_router, prefix="/api/audit", tags=["Audit"])
+
+main_router.include_router(files_router, prefix="/api/files", tags=["Files"])
+
+main_router.include_router(group_router, prefix="/api/groups", tags=["Groups"])

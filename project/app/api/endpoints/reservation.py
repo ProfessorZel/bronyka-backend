@@ -7,7 +7,7 @@ from app.api.validators import (
     check_meeting_room_exists,
     check_reservation_intersections,
     check_reservation_before_edit,
-    check_user_exists,
+    check_user_exists, check_reservation_permissions,
 )
 from app.core.db import get_async_session
 from app.core.user import current_user, current_superuser, get_user_manager
@@ -63,6 +63,14 @@ async def create_reservation(
         # Проверяем существование пользователя, для которого создаем бронь
         await check_user_exists(user_id=reservation.user_id, session=session)
         reservation_user = await user_manager.get(reservation.user_id)
+
+    if not user.is_superuser:
+        await check_reservation_permissions(
+            to_reserve=reservation.to_reserve,
+            meetingroom_id=reservation.meetingroom_id,
+            user=reservation_user,
+            session=session
+        )
 
     await check_reservation_intersections(
         # Т.к. валидатор принимает **kwargs, аргументы нужно передать
@@ -191,6 +199,14 @@ async def update_reservation(
     reservation_before = await check_reservation_before_edit(
         reservation_id, session, reservation_user
     )
+
+    if not user.is_superuser:
+        await check_reservation_permissions(
+            to_reserve=obj_in.to_reserve,
+            meetingroom_id=obj_in.meetingroom_id,
+            user=reservation_user,
+            session=session
+        )
 
     # Проверяем, что нет пересечений с другими бронированиями
     await check_reservation_intersections(

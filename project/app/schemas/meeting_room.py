@@ -6,25 +6,22 @@ from pydantic import BaseModel, Field, validator
 
 # Базовый класс схемы, от которого наследуем все остальные
 class MeetingRoom(BaseModel):
-    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    name: str = Field(None, min_length=2, max_length=100)
     description: Optional[str]
+    icon: Optional[str]
 
     class Config:
         schema_extra = {
             "example": {
                 "name": "Переговорная комната #1",
-                "description": "Просторная комната на 40 человек. "
-                "Есть флипчарт, проектор, кофемашина.",
+                "description": "Просторная комната на 40 человек. ",
+                "icon": "icon12.jpg",
             }
         }
 
 
 # Теперь наследуем схему не от BaseModel а от MeetingRoom
 class MeetingRoomCreate(MeetingRoom):
-    # Переопределяем атрибут name и делаем его обязательным
-    # Поле description описывать ненужно - он есть в базовом классе
-    name: str = Field(..., min_length=2, max_length=100)
-
     @validator("name")
     def name_is_numeric(cls, value: str):
         if value.isnumeric():

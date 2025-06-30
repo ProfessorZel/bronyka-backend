@@ -1,4 +1,5 @@
 # app/api/validators.py
+import time
 from typing import Optional
 from datetime import datetime, timedelta
 from app.core.config import settings
@@ -8,9 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
+from app.crud.group import group_crud
 from app.crud.user import user_crud
 from app.models import MeetingRoom, Reservation, User
 
+from app.models import Group
+from app.models import GroupRoomPermission
+from app.schemas.meeting_room import MeetingRoomCreate
 
 
 # Корутина, которая проверяет уникальность имени переговорной
@@ -45,6 +50,17 @@ async def check_user_exists(
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     return user
 
+# Корутина, которая проверяет, существует ли объект в БД с таким ID
+async def check_group_exists(
+    group_id: int, session: AsyncSession
+) -> Group:
+    # Получаем объект из БД по ID
+    user = await group_crud.get(obj_id=group_id, session=session)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Группа не найдена")
+    return user
+
+
 
 async def check_reservation_intersections(
         from_reserve: datetime,
@@ -73,6 +89,28 @@ async def check_reservation_intersections(
     )
     if reservation:
         raise HTTPException(status_code=422, detail="Двойное бронирование одним человеком, уже есть бронь:"+str(reservation))
+
+async def check_reservation_permissions(
+        to_reserve: datetime,
+        meetingroom_id: int,
+        user: User,
+        session: AsyncSession,
+) -> None:
+    group: Group = await group_crud.get(obj_id=user.group_id, session=session)
+    if group is None:
+        raise HTTPException(status_code=403, detail="Вам не назначена ни одна группа, бронирование запрещено.")
+
+    perms = [perm for perm in group.permissions if perm.meetingroom_id == meetingroom_id]
+    if len(perms) == 0:
+        raise HTTPException(status_code=403,
+                            detail=f"У группы {group.name} нет права на бронирование {meetingroom_id}")
+    if len(perms) > 1:
+        raise HTTPException(status_code=500, detail=f"Ошибка в данных, более 1 разрешения у одной группы {group.name} для {meetingroom_id}")
+    perm: GroupRoomPermission = perms[0]
+
+    if to_reserve - datetime.now() > perm.max_future_reservation:
+        raise HTTPException(status_code=403,
+                            detail=f"Группа {group.name} не может бронировать {meetingroom_id} больше чем на {perm.max_future_reservation} вперед")
 
 
 

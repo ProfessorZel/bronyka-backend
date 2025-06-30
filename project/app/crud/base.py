@@ -18,7 +18,7 @@ class CRUDBase:
 
     async def get_multi(self, session: AsyncSession):
         db_objs = await session.execute(select(self.model))
-        return db_objs.scalars().all()
+        return db_objs.unique().scalars().all()
 
     async def create(
         self,

@@ -4,9 +4,14 @@ import secrets
 import ssl
 from typing import Optional, Union, Callable
 
+from fastapi_users.db import BaseUserDatabase
+from fastapi_users.password import PasswordHelperProtocol
+
 from app.core.config import settings
 from app.core.db import get_async_session
+from app.crud.group import group_crud
 from app.models.user import User
+from app.schemas.group import Group
 from app.schemas.user import UserCreate
 from app.schemas.user import UserUpdate
 from fastapi import Depends, Request
@@ -54,6 +59,13 @@ auth_backend = AuthenticationBackend(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
+    session = None
+
+    def __init__(self, user_db: BaseUserDatabase[models.UP, models.ID], session: AsyncSession,
+                 password_helper: Optional[PasswordHelperProtocol] = None):
+        super().__init__(user_db, password_helper)
+        self.session = session
+
     # Опишем свои условия валидации пароля
     async def validate_password(
             self, password: str, user: Union[UserCreate, User]
@@ -96,7 +108,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             return None
 
         try:
-            # Конфигурация LDAP из настроек
+            # поиск пользователя в AD для того чтобы получить DN
             tls_configuration = Tls(validate=ssl.CERT_REQUIRED) if settings.LDAP_USE_SSL else None
             server = Server(
                 settings.LDAP_SERVER,
@@ -122,7 +134,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             )
 
             if not search_conn.entries:
-                logging.error("LDAP AUTH:No entries found")
+                logging.error("LDAP AUTH: No entries found")
                 return None
 
             user_entry = search_conn.entries[0]
@@ -143,14 +155,26 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             email = email + settings.LDAP_EMAIL_SUFFIX
             logging.error(f"LDAP AUTH: Email is '{email}'")
 
+
+            # теперь назначим права администратора и распределим по группам
+            registered_groups = await group_crud.get_multi(self.session)
             super_user = False
+            group_id = None
             if 'memberOf' in user_entry:
                 group_dns = user_entry['memberOf'].value
                 for group_dn in group_dns:
-                    if group_dn == settings.LDAP_ADMIN_GROUP:
-                        super_user = True
-                        break
+                    if super_user is False:
+                        if group_dn == settings.LDAP_ADMIN_GROUP:
+                            super_user = True
 
+                    if group_id is None:
+                        for registered_group in registered_groups:
+                            registered_group: Group = registered_group
+                            if registered_group.adGroupDN == group_dn:
+                                group_id = registered_group.id
+
+                    if super_user is True and group_id is not None:
+                        break
 
             # Поиск или создание пользователя в БД
             try:
@@ -173,6 +197,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             if user.is_superuser != super_user:
                 await self.update(UserUpdate(is_superuser=super_user), user, False)
 
+            if user.group_id != group_id:
+                await self.update(UserUpdate(group_id=group_id), user, True)
+
             return user
 
         except LDAPException as e:
@@ -185,8 +212,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
 
 # Корутина возвращающая объект класса UserManager
-async def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
+async def get_user_manager(user_db=Depends(get_user_db), session: AsyncSession = Depends(get_async_session)):
+    yield UserManager(user_db, session)
 
 
 # Создадим объект FastAPIUsers для связи объекта UserManager

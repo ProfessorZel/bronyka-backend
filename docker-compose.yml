@@ -5,6 +5,7 @@ services:
       - .env
     volumes:
       - ${DATA_FOLDER}:/usr/src/app/data/
+      - ./project/alembic/versions:/usr/src/app/alembic/versions
     ports:
 
       - ${PUBLIC_PORT}:8000
