@@ -92,25 +92,25 @@ async def check_reservation_intersections(
 
 async def check_reservation_permissions(
         to_reserve: datetime,
-        meetingroom_id: int,
+        meetingroom: MeetingRoom,
         user: User,
         session: AsyncSession,
 ) -> None:
     group: Group = await group_crud.get(obj_id=user.group_id, session=session)
     if group is None:
-        raise HTTPException(status_code=403, detail="Вам не назначена ни одна группа, бронирование запрещено.")
+        raise HTTPException(status_code=422, detail="Вам не назначена ни одна группа, бронирование запрещено.")
 
-    perms = [perm for perm in group.permissions if perm.meetingroom_id == meetingroom_id]
+    perms = [perm for perm in group.permissions if perm.meetingroom_id == meetingroom.id]
     if len(perms) == 0:
-        raise HTTPException(status_code=403,
-                            detail=f"У группы {group.name} нет права на бронирование {meetingroom_id}")
+        raise HTTPException(status_code=422,
+                            detail=f"У группы {group.name} нет права на бронирование {meetingroom.name}")
     if len(perms) > 1:
-        raise HTTPException(status_code=500, detail=f"Ошибка в данных, более 1 разрешения у одной группы {group.name} для {meetingroom_id}")
+        raise HTTPException(status_code=500, detail=f"Ошибка в данных, более 1 разрешения у одной группы {group.name} для {meetingroom.name}")
     perm: GroupRoomPermission = perms[0]
 
     if to_reserve - datetime.now() > perm.max_future_reservation:
-        raise HTTPException(status_code=403,
-                            detail=f"Группа {group.name} не может бронировать {meetingroom_id} больше чем на {perm.max_future_reservation} вперед")
+        raise HTTPException(status_code=422,
+                            detail=f"Группа {group.name} не может бронировать {meetingroom.name} больше чем на {perm.max_future_reservation} вперед")
 
 
 

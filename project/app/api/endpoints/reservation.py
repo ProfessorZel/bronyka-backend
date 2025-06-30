@@ -49,7 +49,7 @@ async def create_reservation(
       Если указано, то пользователь должен быть суперпользователем.
       Если не указано, то бронь создается для текущего пользователя.
     """
-    await check_meeting_room_exists(reservation.meetingroom_id, session)
+    meeting_room = await check_meeting_room_exists(reservation.meetingroom_id, session)
 
     # Определяем, для какого пользователя создаем бронь
     reservation_user = user
@@ -67,7 +67,7 @@ async def create_reservation(
     if not user.is_superuser:
         await check_reservation_permissions(
             to_reserve=reservation.to_reserve,
-            meetingroom_id=reservation.meetingroom_id,
+            meetingroom=meeting_room,
             user=reservation_user,
             session=session
         )
