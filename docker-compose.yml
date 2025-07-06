@@ -4,8 +4,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ${DATA_FOLDER}:/usr/src/app/data/
-      - ./project/alembic/versions:/usr/src/app/alembic/versions
+      - ${DATA_FOLDER}/fastapi.db:/usr/src/app/data/fastapi.db
+      #- ./project/alembic/versions:/usr/src/app/alembic/versions
+      - ${DATA_FOLDER}/uploads:/usr/src/app/uploads
     ports:
 
       - ${PUBLIC_PORT}:8000
