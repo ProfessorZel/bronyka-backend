@@ -19,4 +19,4 @@ class Group(Base):
         passive_deletes=True
     )
     def __repr__(self) -> str:
-        return f"(id: {self.id}) {self.name} ({self.adGroupDN})"
+        return f"(id: {self.id}) {self.name} ({self.adGroupDN}) with permissions: {self.permissions}"

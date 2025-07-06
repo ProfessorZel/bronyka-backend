@@ -14,7 +14,7 @@ class CRUDAuditEvent(CRUDBase):
         db_objs = await session.execute(
             select(self.model).order_by(AuditEvent.time.desc())
         )
-        return db_objs.scalars().all()
+        return db_objs.unique().scalars().all()
 
     async def remove_older(
             self,

@@ -7,7 +7,7 @@ from app.schemas.group import Group
 
 class UserRead(schemas.BaseUser[int]):
     fio: Optional[str]
-    group: Group
+    group: Optional[Group]
 
 class UserCreate(schemas.BaseUserCreate):
     fio: Optional[str]

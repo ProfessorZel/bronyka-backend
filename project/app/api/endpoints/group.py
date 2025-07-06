@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators import (
-    check_group_exists,
+    check_group_exists, check_meeting_room_exists,
 )
 from app.core.db import get_async_session
 from app.core.user import current_user, current_superuser
@@ -13,7 +13,7 @@ from app.crud.group import group_crud
 from app.models import User
 from app.schemas.audit import AuditCreate
 from app.schemas.group import (
-    Group, GroupCreated, GroupWithPerms, GroupUpdateWithPerms,
+    Group, GroupCreated, GroupWithPerms, GroupUpdateWithPerms
 )
 
 router = APIRouter()
@@ -41,9 +41,10 @@ async def create_group(
     event = AuditCreate(
         description="Создана группа: {0}".format(
             new_group
-        )
+        ),
+        user_id=user.id,
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return new_group
 
@@ -93,9 +94,10 @@ async def delete_group(
     event = AuditCreate(
         description="Удалена группа: {0}".format(
             group
-        )
+        ),
+        user_id=user.id,
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return group
 
@@ -122,6 +124,8 @@ async def update_group(
 
     # Проверка на дубликаты meetingroom_id
     meetingroom_ids = [perm.meetingroom_id for perm in obj_in.permissions]
+    for meetingroom_id in meetingroom_ids:
+        await check_meeting_room_exists(meetingroom_id, session=session)
     if len(meetingroom_ids) != len(set(meetingroom_ids)):
         duplicates = {x for x in meetingroom_ids if meetingroom_ids.count(x) > 1}
         raise HTTPException(
@@ -136,9 +140,10 @@ async def update_group(
     event = AuditCreate(
         description="Обновлена группа: {0}".format(
             updated_group
-        )
+        ),
+        user_id=user.id,
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return updated_group
 

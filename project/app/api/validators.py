@@ -37,7 +37,7 @@ async def check_meeting_room_exists(
     # Получаем объект из БД по ID
     meeting_room = await meeting_room_crud.get(meeting_room_id, session)
     if meeting_room is None:
-        raise HTTPException(status_code=404, detail="Переговорка не найдена")
+        raise HTTPException(status_code=404, detail=f"Переговорка не найдена ID: {meeting_room_id}")
     return meeting_room
 
 # Корутина, которая проверяет, существует ли объект в БД с таким ID
@@ -47,7 +47,7 @@ async def check_user_exists(
     # Получаем объект из БД по ID
     user = await user_crud.get(obj_id=user_id, session=session)
     if user is None:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
+        raise HTTPException(status_code=404, detail=f"Пользователь не найден ID: {user_id}")
     return user
 
 # Корутина, которая проверяет, существует ли объект в БД с таким ID
@@ -57,7 +57,7 @@ async def check_group_exists(
     # Получаем объект из БД по ID
     user = await group_crud.get(obj_id=group_id, session=session)
     if user is None:
-        raise HTTPException(status_code=404, detail="Группа не найдена")
+        raise HTTPException(status_code=404, detail=f"Группа не найдена ID: {group_id}")
     return user
 
 

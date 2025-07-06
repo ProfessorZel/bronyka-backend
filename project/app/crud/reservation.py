@@ -78,8 +78,8 @@ class CRUDReservation(CRUDBase):
                     Reservation.to_reserve,
                 ),
                 and_(
-                    from_reserve <= Reservation.from_reserve,
-                    to_reserve >= Reservation.to_reserve,
+                    from_reserve < Reservation.from_reserve,
+                    to_reserve > Reservation.to_reserve,
                 ),
             ),
         )

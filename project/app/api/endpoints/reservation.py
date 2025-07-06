@@ -82,15 +82,16 @@ async def create_reservation(
         session=session
     )
 
-    new_reservation = await reservation_crud.create(reservation, session, reservation_user)
+    new_reservation = await reservation_crud.create(reservation, session)
 
     # создаем аудит
     event = AuditCreate(
         description="Создано бронирование: {0}".format(
             new_reservation
-        )
+        ),
+        user_id=user.id
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return new_reservation
 
@@ -146,9 +147,10 @@ async def delete_reservation(
     event = AuditCreate(
         description="Удалено бронирование: {0}".format(
             reservation
-        )
+        ),
+        user_id=user.id
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return reservation
 
@@ -229,8 +231,9 @@ async def update_reservation(
             reservation_before,
             reservation
         ),
+        user_id=user.id
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return reservation
 

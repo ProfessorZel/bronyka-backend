@@ -118,8 +118,9 @@ async def partially_update_meeting_room(
             meeting_room_before,
             meeting_room
         ),
+        user_id=user.id
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
     return meeting_room
 
 
@@ -157,8 +158,9 @@ async def remove_meeting_room(
             meeting_room.id,
             meeting_room
         ),
+        user_id=user.id
     )
-    await audit_crud.create(event, session, user)
+    await audit_crud.create(event, session)
 
     return meeting_room
 

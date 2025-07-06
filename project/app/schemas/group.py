@@ -4,7 +4,8 @@ from typing import List
 from pydantic import BaseModel, Extra, Field
 
 from app import models
-from app.schemas.group_room_permissions import GroupRoomPermission
+from app.schemas.group_room_permissions import GroupRoomPermission, GroupRoomPermissionRepr
+
 
 # Базовый класс, от которого будем наследоваться
 class Group(BaseModel):
@@ -23,8 +24,7 @@ class GroupCreated(Group):
     id: int
 
 class GroupWithPerms(GroupCreated):
-    permissions: List[GroupRoomPermission]
+    permissions: List[GroupRoomPermissionRepr]
 
 class GroupUpdateWithPerms(Group):
     permissions: List[GroupRoomPermission]
-
