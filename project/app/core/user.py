@@ -153,34 +153,31 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 )
             )
 
-        if user.is_superuser != super_user:
-            await self.update(UserUpdate(is_superuser=super_user), user, False)
-
-        if user.group_id != group_id:
-            await self.update(UserUpdate(group_id=group_id), user, True)
+        if user.is_superuser != super_user or user.group_id != group_id:
+            await self.update(UserUpdate(is_superuser=super_user, group_id=group_id, fio=fio), user, False)
 
         return user
 
-def devmap_search(username, password: str) -> (str, str, list):
+def devmap_search(username, password: str) -> (str, str, list[str]):
     usermap = {
         "admin": {
             "password": "admin",
             "fio": "Admin Admin",
             "email": "admin@localhost.com",
-            "groups": ["OU=admin,OU=groups,DC=example,DC=com",
-                       "OU=group3,OU=groups,DC=example,DC=com"],
+            "groups": ["CN=admin,OU=groups,DC=example,DC=com",
+                       "CN=group3,OU=groups,DC=example,DC=com"],
         },
         "group1": {
             "fio": "Group 1",
             "password": "group1",
             "email": "group1@localhost.com",
-            "groups": ["OU=group1,OU=groups,DC=example,DC=com"],
+            "groups": ["CN=group1,OU=groups,DC=example,DC=com"],
         },
         "group2": {
             "fio": "Group 2",
             "password": "group2",
             "email": "group2@localhost.com",
-            "groups": ["OU=group2,OU=groups,DC=example,DC=com"],
+            "groups": ["CN=group2,OU=groups,DC=example,DC=com"],
         }
     }
     if username not in usermap:
