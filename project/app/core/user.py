@@ -107,109 +107,151 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             logging.error("LDAP AUTH: No username or password")
             return None
 
-        try:
-            # поиск пользователя в AD для того чтобы получить DN
-            tls_configuration = Tls(validate=ssl.CERT_REQUIRED) if settings.LDAP_USE_SSL else None
-            server = Server(
-                settings.LDAP_SERVER,
-                port=settings.LDAP_PORT,
-                use_ssl=settings.LDAP_USE_SSL,
-                tls=tls_configuration,
-                get_info=ALL
-            )
+        if settings.DEVELOPMENT_MODE:
+            email, fio, group_dns = devmap_search(username, password)
+        else:
+            email, fio, group_dns = ldap_search_user(username, password)
 
-            # Поиск пользователя в LDAP
-            search_conn = Connection(
-                server,
-                user=settings.LDAP_BIND_DN,
-                password=settings.LDAP_BIND_PASSWORD,
-                auto_bind=True
-            )
-
-            search_filter = settings.LDAP_USER_SEARCH_FILTER.format(username=username)
-            search_conn.search(
-                search_base=settings.LDAP_USER_SEARCH_BASE,
-                search_filter=search_filter,
-                attributes=settings.LDAP_USER_ATTRIBUTES
-            )
-
-            if not search_conn.entries:
-                logging.error("LDAP AUTH: No entries found")
-                return None
-
-            user_entry = search_conn.entries[0]
-            user_dn = user_entry.entry_dn
-
-            # Аутентификация пользователя
-            auth_conn = Connection(server, user=user_dn, password=password)
-            if not auth_conn.bind():
-                logging.error("LDAP AUTH: Binding failed")
-                return None
-            # Извлечение данных пользователя
-            email = getattr(user_entry, settings.LDAP_EMAIL_ATTRIBUTE, None).value
-            fio = getattr(user_entry, settings.LDAP_FIO_ATTRIBUTE, None).value
-            if not email:
-                logging.error("LDAP AUTH: Email attribute not found")
-                return None
-
-            email = email + settings.LDAP_EMAIL_SUFFIX
-            logging.error(f"LDAP AUTH: Email is '{email}'")
-
-
-            # теперь назначим права администратора и распределим по группам
-            registered_groups = await group_crud.get_multi(self.session)
-            super_user = False
-            group_id = None
-            if 'memberOf' in user_entry:
-                group_dns = user_entry['memberOf'].value
-                for group_dn in group_dns:
-                    if super_user is False:
-                        if group_dn == settings.LDAP_ADMIN_GROUP:
-                            super_user = True
-
-                    if group_id is None:
-                        for registered_group in registered_groups:
-                            registered_group: Group = registered_group
-                            if registered_group.adGroupDN == group_dn:
-                                group_id = registered_group.id
-
-                    if super_user is True and group_id is not None:
-                        break
-
-            # Поиск или создание пользователя в БД
-            try:
-                user = await self.get_by_email(email)
-            except UserNotExists:
-                user = None
-
-            if not user:
-                # Создаем пользователя с флагом LDAP
-                user = await self.create(
-                    UserCreate(
-                        email=email,
-                        is_active=True,
-                        is_superuser=False,
-                        password=secrets.token_urlsafe(32),
-                        fio=fio,
-                    )
-                )
-
-            if user.is_superuser != super_user:
-                await self.update(UserUpdate(is_superuser=super_user), user, False)
-
-            if user.group_id != group_id:
-                await self.update(UserUpdate(group_id=group_id), user, True)
-
-            return user
-
-        except LDAPException as e:
-            print(f"LDAP error: {e}")
-            logging.error(f"LDAP AUTH: {e}")
+        if email is None:
+            logging.error("LDAP AUTH: Failed")
             return None
-        finally:
-            if 'search_conn' in locals() and search_conn.bound:
-                search_conn.unbind()
 
+        # теперь назначим права администратора и распределим по группам
+        registered_groups = await group_crud.get_multi(self.session)
+        super_user = False
+        group_id = None
+
+        for group_dn in group_dns:
+            if super_user is False:
+                if group_dn == settings.LDAP_ADMIN_GROUP:
+                    super_user = True
+
+            if group_id is None:
+                for registered_group in registered_groups:
+                    registered_group: Group = registered_group
+                    if registered_group.adGroupDN == group_dn:
+                        group_id = registered_group.id
+
+            if super_user is True and group_id is not None:
+                break
+
+        # Поиск или создание пользователя в БД
+        try:
+            user = await self.get_by_email(email)
+        except UserNotExists:
+            user = None
+
+        if not user:
+            # Создаем пользователя с флагом LDAP
+            user = await self.create(
+                UserCreate(
+                    email=email,
+                    is_active=True,
+                    is_superuser=False,
+                    password=secrets.token_urlsafe(32),
+                    fio=fio,
+                )
+            )
+
+        if user.is_superuser != super_user:
+            await self.update(UserUpdate(is_superuser=super_user), user, False)
+
+        if user.group_id != group_id:
+            await self.update(UserUpdate(group_id=group_id), user, True)
+
+        return user
+
+def devmap_search(username, password: str) -> (str, str, list):
+    usermap = {
+        "admin": {
+            "password": "admin",
+            "email": "admin@localhost.com",
+            "groups": ["OU=admin,OU=groups,DC=example,DC=com",
+                       "OU=group3,OU=groups,DC=example,DC=com"],
+        },
+        "group1": {
+            "password": "group1",
+            "email": "group1@localhost.com",
+            "groups": ["OU=group1,OU=groups,DC=example,DC=com"],
+        },
+        "group2": {
+            "password": "group2",
+            "email": "group2@localhost.com",
+            "groups": ["OU=group2,OU=groups,DC=example,DC=com"],
+        }
+    }
+    if username not in map:
+        return None, None, None
+    user = usermap[username]
+    if password != user["password"]:
+        return None, None, None
+
+    return user["email"], user["fio"], user["groups"]
+
+
+
+def ldap_search_user(username, password: str) -> (str, str, list[str]):
+    try:
+        # поиск пользователя в AD для того чтобы получить DN
+        tls_configuration = Tls(validate=ssl.CERT_REQUIRED) if settings.LDAP_USE_SSL else None
+        server = Server(
+            settings.LDAP_SERVER,
+            port=settings.LDAP_PORT,
+            use_ssl=settings.LDAP_USE_SSL,
+            tls=tls_configuration,
+            get_info=ALL
+        )
+
+        # Поиск пользователя в LDAP
+        search_conn = Connection(
+            server,
+            user=settings.LDAP_BIND_DN,
+            password=settings.LDAP_BIND_PASSWORD,
+            auto_bind=True
+        )
+
+        search_filter = settings.LDAP_USER_SEARCH_FILTER.format(username=username)
+        search_conn.search(
+            search_base=settings.LDAP_USER_SEARCH_BASE,
+            search_filter=search_filter,
+            attributes=settings.LDAP_USER_ATTRIBUTES
+        )
+
+        if not search_conn.entries:
+            logging.error("LDAP AUTH: No entries found")
+            return None, None, None
+
+        user_entry = search_conn.entries[0]
+        user_dn = user_entry.entry_dn
+
+        # Аутентификация пользователя
+        auth_conn = Connection(server, user=user_dn, password=password)
+        if not auth_conn.bind():
+            logging.error("LDAP AUTH: Binding failed")
+            return None, None, None
+        # Извлечение данных пользователя
+        email = getattr(user_entry, settings.LDAP_EMAIL_ATTRIBUTE, None).value
+        fio = getattr(user_entry, settings.LDAP_FIO_ATTRIBUTE, None).value
+        if not email:
+            logging.error("LDAP AUTH: Email attribute not found")
+            return None, None, None
+
+        email = email + settings.LDAP_EMAIL_SUFFIX
+        logging.error(f"LDAP AUTH: Email is '{email}'")
+
+        if 'memberOf' in user_entry:
+            group_dns = user_entry['memberOf'].value
+        else:
+            group_dns = []
+
+        return email, fio, group_dns
+    except LDAPException as e:
+        print(f"LDAP error: {e}")
+        logging.error(f"LDAP AUTH: {e}")
+        return None, None, None
+    finally:
+        if 'search_conn' in locals() and search_conn.bound:
+            search_conn.unbind()
 
 # Корутина возвращающая объект класса UserManager
 async def get_user_manager(user_db=Depends(get_user_db), session: AsyncSession = Depends(get_async_session)):

@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     LDAP_ADMIN_GROUP: str = "CN=admins,DC=example,DC=com"
     LDAP_EMAIL_SUFFIX: str = "@example.com"
 
+    DEVELOPMENT_MODE: bool = False
+
     class Config:
         env_file = ".env"
 
