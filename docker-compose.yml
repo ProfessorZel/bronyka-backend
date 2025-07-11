@@ -7,9 +7,6 @@ services:
       - ${DATA_FOLDER}/fastapi.db:/usr/src/app/data/fastapi.db
       #- ./project/alembic/versions:/usr/src/app/alembic/versions
       - ${DATA_FOLDER}/uploads:/usr/src/app/uploads
-    ports:
-
-      - ${PUBLIC_PORT}:8000
     environment:
       # ${...} - параметры извлекаемые из .env файла
       - SECRET_KEY=${SECRET_KEY}
