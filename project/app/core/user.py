@@ -154,7 +154,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             )
 
         if user.is_superuser != super_user or user.group_id != group_id:
-            await self.update(UserUpdate(is_superuser=super_user, group_id=group_id, fio=fio), user, False)
+            user = await self.update(UserUpdate(is_superuser=super_user, group_id=group_id, fio=fio), user, False)
 
         return user
 
