@@ -45,7 +45,7 @@ class ReservationRoomUpdate(ReservationRoomBase):
             raise ValueError("Пользователь на которого назначают бронь не может быть пустым")
         return value
 
-    @model_validator()
+    @model_validator(mode='after')
     def check_from_reserve_before_to_reserve(cls, values):
         if values["from_reserve"] >= values["to_reserve"]:
             raise ValueError(
