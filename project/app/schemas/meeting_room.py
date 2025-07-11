@@ -1,7 +1,7 @@
 # app/schemas/meeting_room.py
 
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_validator
 
 
 # Базовый класс схемы, от которого наследуем все остальные
@@ -22,7 +22,7 @@ class MeetingRoom(BaseModel):
 
 # Теперь наследуем схему не от BaseModel а от MeetingRoom
 class MeetingRoomCreate(MeetingRoom):
-    @validator("name")
+    @field_validator("name")
     def name_is_numeric(cls, value: str):
         if value.isnumeric():
             raise ValueError("Имя не может быть числом")
@@ -40,7 +40,7 @@ class MeetingRoomDB(MeetingRoomCreate):
 
 
 class MeetingRoomUpdate(MeetingRoom):
-    @validator("name")
+    @field_validator("name")
     def name_cannot_be_null(cls, value):
         if value is None:
             raise ValueError("Имя переговорки не может быть пустым")

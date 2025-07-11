@@ -1,7 +1,7 @@
 # app/schemas/reservation.py
 from typing import Optional
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Extra, root_validator, validator, Field
+from pydantic import BaseModel, Extra, root_validator, validator, Field, field_validator, model_validator
 
 from app.core.config import settings
 from app.schemas.meeting_room import MeetingRoomDB
@@ -30,7 +30,7 @@ class ReservationRoomBase(BaseModel):
 
 
 class ReservationRoomUpdate(ReservationRoomBase):
-    @validator("from_reserve")
+    @field_validator("from_reserve")
     def check_from_reserve_later_than_now(cls, value):
         if value <= datetime.now() - timedelta(seconds=settings.backdate_reservation_allowed_seconds):
             raise ValueError(
@@ -39,13 +39,13 @@ class ReservationRoomUpdate(ReservationRoomBase):
             )
         return value
 
-    @validator("user_id")
+    @field_validator("user_id")
     def check_user_id_not_empty(cls, value):
         if value is not None and value.strip() == "":
             raise ValueError("Пользователь на которого назначают бронь не может быть пустым")
         return value
 
-    @root_validator(skip_on_failure=True)
+    @model_validator()
     def check_from_reserve_before_to_reserve(cls, values):
         if values["from_reserve"] >= values["to_reserve"]:
             raise ValueError(
