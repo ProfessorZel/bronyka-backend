@@ -23,7 +23,6 @@ class ReservationRoomBase(BaseModel):
         example="1",
         nullable=True
     )
-
     class Config:
         # Запрещает передавать параметры, которые не будут описаны в схеме
         extra = Extra.forbid
@@ -47,12 +46,12 @@ class ReservationRoomUpdate(ReservationRoomBase):
 
     @model_validator(mode='after')
     def check_from_reserve_before_to_reserve(cls, values):
-        if values["from_reserve"] >= values["to_reserve"]:
+        if values.from_reserve >= values.to_reserve:
             raise ValueError(
                 "Время начала бронирования, "
                 "не может быть больше его окончания"
             )
-        if values["to_reserve"] - values["from_reserve"] > timedelta(minutes=settings.max_reservation_duration_minutes):
+        if values.to_reserve - values.from_reserve > timedelta(minutes=settings.max_reservation_duration_minutes):
             raise ValueError(
                 f"Бронирование не может быть дольше {settings.max_reservation_duration_minutes} минут"
             )
@@ -84,4 +83,4 @@ class ReservationRoomDB(ReservationRoomBase):
 
     # разрешим сериализацию объектов из БД
     class Config:
-        orm_mode = True
+        from_attributes = True

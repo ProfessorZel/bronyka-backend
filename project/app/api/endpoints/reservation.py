@@ -61,8 +61,9 @@ async def create_reservation(
                 detail="Только суперпользователь может создавать бронирования для других пользователей"
             )
         # Проверяем существование пользователя, для которого создаем бронь
-        await check_user_exists(user_id=reservation.user_id, session=session)
-        reservation_user = await user_manager.get(reservation.user_id)
+        reservation_user = await check_user_exists(user_id=reservation.user_id, session=session)
+    # cyclic but syncs both variables
+    reservation.user_id = reservation_user.id
 
     if not user.is_superuser:
         await check_reservation_permissions(

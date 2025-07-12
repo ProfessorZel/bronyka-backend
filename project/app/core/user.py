@@ -2,7 +2,7 @@
 import logging
 import secrets
 import ssl
-from typing import Optional, Union, Callable
+from typing import Optional, Union
 
 from fastapi_users.db import BaseUserDatabase
 from fastapi_users.password import PasswordHelperProtocol
@@ -142,7 +142,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user = None
 
         if not user:
-            # Создаем пользователя с флагом LDAP
             user = await self.create(
                 UserCreate(
                     email=email,

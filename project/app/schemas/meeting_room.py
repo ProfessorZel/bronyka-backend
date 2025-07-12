@@ -36,7 +36,7 @@ class MeetingRoomDB(MeetingRoomCreate):
     # Укажем FastAPI, что он может сериализовать объёкт базы данных
     # а не только словарь или json
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class MeetingRoomUpdate(MeetingRoom):

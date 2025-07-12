@@ -1,4 +1,4 @@
-# app/schemas/reservation.py
+# app/schemas/audit.py
 from datetime import datetime
 from typing import Optional
 
@@ -28,7 +28,7 @@ class AuditBase(BaseModel):
     class Config:
         # Запрещает передавать параметры, которые не будут описаны в схеме
         extra = Extra.forbid
-        orm_mode = True
+        from_attributes = True
 
 class AuditCreate(BaseModel):
     description: str

@@ -47,7 +47,7 @@ class CRUDReservation(CRUDBase):
         if reservation_id is not None:
             select_stmt = select_stmt.where(Reservation.id != reservation_id)
         reservations = await session.execute(select_stmt)
-        reservations = reservations.scalars().all()
+        reservations = reservations.unique().scalars().all()
         return reservations
 
     async def get_user_reservations_at_the_same_time(
@@ -87,7 +87,7 @@ class CRUDReservation(CRUDBase):
         if reservation_id is not None:
             select_stmt = select_stmt.where(Reservation.id != reservation_id)
         reservations = await session.execute(select_stmt)
-        reservations = reservations.scalars().all()
+        reservations = reservations.unique().scalars().all()
         return reservations
 
     async def get_reservations_for_room(
@@ -113,7 +113,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.to_reserve >= datetime.now()
                 ).order_by(Reservation.from_reserve)
             )
-        reservations = reservations.scalars().all()
+        reservations = reservations.unique().scalars().all()
         return reservations
 
     async def get_reservations_for_user(
@@ -135,7 +135,7 @@ class CRUDReservation(CRUDBase):
                     Reservation.to_reserve >= datetime.now()
                 ).order_by(Reservation.from_reserve)
             )
-        reservations = reservations.scalars().all()
+        reservations = reservations.unique().scalars().all()
         return reservations
 
     async def get_reservations_current(
@@ -148,7 +148,7 @@ class CRUDReservation(CRUDBase):
                 Reservation.from_reserve <= datetime.now()
             ).order_by(Reservation.from_reserve.desc())
         )
-        reservations = reservations.scalars().all()
+        reservations = reservations.unique().scalars().all()
         return reservations
 
     async def remove_older(

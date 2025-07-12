@@ -43,7 +43,7 @@ async def check_meeting_room_exists(
 # Корутина, которая проверяет, существует ли объект в БД с таким ID
 async def check_user_exists(
     user_id: int, session: AsyncSession
-) -> MeetingRoom:
+) -> User:
     # Получаем объект из БД по ID
     user = await user_crud.get(obj_id=user_id, session=session)
     if user is None:

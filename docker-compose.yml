@@ -5,8 +5,10 @@ services:
       - .env
     volumes:
       - ${DATA_FOLDER}/fastapi.db:/usr/src/app/data/fastapi.db
-      #- ./project/alembic/versions:/usr/src/app/alembic/versions
+      - ./project/alembic/versions:/usr/src/app/alembic/versions
       - ${DATA_FOLDER}/uploads:/usr/src/app/uploads
+    ports:
+      - ${PUBLIC_PORT}:${PUBLIC_PORT}
     environment:
       # ${...} - параметры извлекаемые из .env файла
       - SECRET_KEY=${SECRET_KEY}

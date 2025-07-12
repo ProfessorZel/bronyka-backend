@@ -1,6 +1,5 @@
 # app/schemas/reservation.py
 from datetime import timedelta
-from typing import Any
 
 from pytimeparse.timeparse import timeparse
 
@@ -30,7 +29,7 @@ class GroupRoomPermission(BaseModel):
     class Config:
         # Запрещает передавать параметры, которые не будут описаны в схеме
         extra = Extra.forbid
-        orm_mode = True
+        from_attributes = True
 
     class Meta:
         orm_model = models.GroupRoomPermission

@@ -1,5 +1,7 @@
 # app/models/reservation.py
-from sqlalchemy import Column, DateTime, ForeignKey, Integer
+from typing import Optional
+
+from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from app.core.db import Base

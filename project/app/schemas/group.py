@@ -1,7 +1,7 @@
 # app/schemas/group.py
 from typing import List
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Field
 
 from app import models
 from app.schemas.group_room_permissions import GroupRoomPermission, GroupRoomPermissionRepr
@@ -12,9 +12,7 @@ class Group(BaseModel):
     name: str = Field(None, min_length=2, max_length=100)
     adGroupDN: str = Field(None, min_length=2, max_length=500)
     class Config:
-        # Запрещает передавать параметры, которые не будут описаны в схеме
-        extra = Extra.forbid
-        orm_mode = True
+        from_attributes = True
 
     class Meta:
         orm_model = models.Group
