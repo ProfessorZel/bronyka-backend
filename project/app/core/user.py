@@ -101,10 +101,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         username = credentials.username
         password = credentials.password
 
-        logging.error(f"LDAP AUTH: Started for {username}")
+        logging.error(f"AUTH: Started for {username}")
 
         if not username or not password:
-            logging.error("LDAP AUTH: No username or password")
+            logging.error("AUTH: No username or password")
             return None
 
         if settings.DEVELOPMENT_MODE:
@@ -113,7 +113,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             email, fio, group_dns = ldap_search_user(username, password)
 
         if email is None:
-            logging.error("LDAP AUTH: Failed")
+            logging.error("AUTH: Failed")
             return None
 
         # теперь назначим права администратора и распределим по группам
@@ -180,9 +180,12 @@ def devmap_search(username, password: str) -> (str, str, list[str]):
         }
     }
     if username not in usermap:
+        logging.error("DEVMAP AUTH: No entries found")
         return None, None, None
+
     user = usermap[username]
     if password != user["password"]:
+        logging.error("DEVMAP AUTH: Invalid password")
         return None, None, None
 
     return user["email"], user["fio"], user["groups"]

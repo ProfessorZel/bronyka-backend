@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field, field_validator
 
 # Базовый класс схемы, от которого наследуем все остальные
 class MeetingRoom(BaseModel):
-    name: str = Field(None, min_length=2, max_length=100)
-    description: Optional[str]
-    icon: Optional[str]
+    name: str = Field(..., min_length=2, max_length=100)
+    description: Optional[str] = Field(..., description="название файла иконки")
+    icon: Optional[str] = Field(None, description="название файла иконки")
 
     class Config:
         schema_extra = {
