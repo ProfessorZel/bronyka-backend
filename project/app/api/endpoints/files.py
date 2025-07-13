@@ -1,11 +1,12 @@
 import os
 import re
 import uuid
-from fastapi import UploadFile, HTTPException, Depends, APIRouter
-from fastapi.responses import FileResponse
 from pathlib import Path
 
-from app.core.user import current_superuser, current_user
+from fastapi import UploadFile, HTTPException, Depends, APIRouter
+from fastapi.responses import FileResponse
+
+from app.core.user import current_superuser
 
 router = APIRouter()
 # Настройки

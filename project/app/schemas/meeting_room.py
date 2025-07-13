@@ -1,7 +1,8 @@
 # app/schemas/meeting_room.py
 
 from typing import Optional
-from pydantic import BaseModel, Field, validator, field_validator
+
+from pydantic import BaseModel, Field, field_validator
 
 
 # Базовый класс схемы, от которого наследуем все остальные
@@ -33,7 +34,7 @@ class MeetingRoomCreate(MeetingRoom):
 class MeetingRoomDB(MeetingRoomCreate):
     id: int
 
-    # Укажем FastAPI, что он может сериализовать объёкт базы данных
+    # Укажем FastAPI, что он может стерилизовать объёкт базы данных,
     # а не только словарь или json
     class Config:
         from_attributes = True

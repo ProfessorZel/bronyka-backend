@@ -1,5 +1,4 @@
 # app/models/reservation.py
-from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship, mapped_column, Mapped

@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, Interval, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, Interval, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.core.db import Base

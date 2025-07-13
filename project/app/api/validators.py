@@ -1,21 +1,18 @@
 # app/api/validators.py
-import time
-from typing import Optional
 from datetime import datetime, timedelta
-from app.core.config import settings
+from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.crud.group import group_crud
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
-from app.crud.group import group_crud
 from app.crud.user import user_crud
-from app.models import MeetingRoom, Reservation, User
-
 from app.models import Group
 from app.models import GroupRoomPermission
-from app.schemas.meeting_room import MeetingRoomCreate
+from app.models import MeetingRoom, Reservation, User
 
 
 # Корутина, которая проверяет уникальность имени переговорной

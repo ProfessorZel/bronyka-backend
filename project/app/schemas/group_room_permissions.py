@@ -1,11 +1,11 @@
 # app/schemas/reservation.py
 from datetime import timedelta
 
+from pydantic import BaseModel, Extra, Field, field_serializer, field_validator
 from pytimeparse.timeparse import timeparse
 
-from pydantic import BaseModel, Extra, Field, validator, field_serializer, field_validator
-
 from app import models
+
 
 # Базовый класс, от которого будем наследоваться
 class GroupRoomPermission(BaseModel):

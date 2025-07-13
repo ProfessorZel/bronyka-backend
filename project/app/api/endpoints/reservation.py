@@ -37,7 +37,6 @@ async def create_reservation(
     session: AsyncSession = Depends(get_async_session),
     # Получаем текущего пользователя и сохраняем его в переменную user
     user: User = Depends(current_user),
-    user_manager = Depends(get_user_manager),
 ):
     """
     Запрос на бронирование конкретной комнаты
@@ -74,7 +73,7 @@ async def create_reservation(
         )
 
     await check_reservation_intersections(
-        # Т.к. валидатор принимает **kwargs, аргументы нужно передать
+        # Т.к. Валидатор принимает **kwargs, аргументы нужно передать
         # с указанием ключей
         from_reserve=reservation.from_reserve,
         to_reserve=reservation.to_reserve,
@@ -185,6 +184,8 @@ async def update_reservation(
       Если указано, то пользователь должен быть суперпользователем.
       Если не указано, то бронь изменяется для текущего пользователя.
     """
+    meeting_room = await check_meeting_room_exists(obj_in.meetingroom_id, session)
+
     # Определяем, для какого пользователя изменяем бронь
     reservation_user = user
     if obj_in.user_id is not None:
@@ -206,7 +207,7 @@ async def update_reservation(
     if not user.is_superuser:
         await check_reservation_permissions(
             to_reserve=obj_in.to_reserve,
-            meetingroom_id=obj_in.meetingroom_id,
+            meetingroom=meeting_room,
             user=reservation_user,
             session=session
         )

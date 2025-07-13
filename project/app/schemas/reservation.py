@@ -1,7 +1,8 @@
 # app/schemas/reservation.py
-from typing import Optional
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Extra, root_validator, validator, Field, field_validator, model_validator
+from typing import Optional
+
+from pydantic import BaseModel, Extra, Field, field_validator, model_validator
 
 from app.core.config import settings
 from app.schemas.meeting_room import MeetingRoomDB
@@ -66,7 +67,7 @@ class ReservationRoomCreate(ReservationRoomUpdate):
     meetingroom_id: int
 
 
-# Pydantic-схема для валидации объектов из БД
+# Pydantic-схема для валидации объектов из БД,
 # но нельзя наследоваться от ReservationRoomCreate, т.к. унаследуется и валидаторы
 # и при получении старых объектов из БД, у нас будет ошибка валидации по дате:
 # старые записи по дате будут уже меньше текущей даты
