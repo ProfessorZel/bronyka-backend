@@ -5,3 +5,4 @@ from .user import router as user_router
 from .audit import router as audit_router
 from .files import router as files_router
 from .group import router as group_router
+from .reporter import router as reporter_router

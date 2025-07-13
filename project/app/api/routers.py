@@ -7,6 +7,7 @@ from app.api.endpoints import (
     audit_router,
     files_router,
     group_router,
+    reporter_router,
 )
 
 main_router = APIRouter()
@@ -24,3 +25,5 @@ main_router.include_router(audit_router, prefix="/api/audit", tags=["Audit"])
 main_router.include_router(files_router, prefix="/api/files", tags=["Files"])
 
 main_router.include_router(group_router, prefix="/api/groups", tags=["Groups"])
+
+main_router.include_router(reporter_router, prefix="/api/reporters", tags=["Reporters"])

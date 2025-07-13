@@ -163,7 +163,7 @@ def devmap_search(username, password: str) -> (str, str, list[str]):
             "password": "admin",
             "fio": "Admin Admin",
             "email": "admin@localhost.com",
-            "groups": ["CN=admin,OU=groups,DC=example,DC=com",
+            "groups": [settings.LDAP_ADMIN_GROUP,
                        "CN=group3,OU=groups,DC=example,DC=com"],
         },
         "group1": {
