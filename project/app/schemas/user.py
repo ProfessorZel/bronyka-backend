@@ -5,6 +5,7 @@ from app.schemas.group import Group
 
 
 class UserRead(schemas.BaseUser[int]):
+    email: str
     fio: Optional[str]
     group: Optional[Group]
 
@@ -12,8 +13,10 @@ class UserRead(schemas.BaseUser[int]):
         from_attributes = True
 
 class UserCreate(schemas.BaseUserCreate):
+    email: str
     fio: Optional[str]
 
 class UserUpdate(schemas.BaseUserUpdate):
+    email: str
     fio: Optional[str]
     group_id: Optional[int]

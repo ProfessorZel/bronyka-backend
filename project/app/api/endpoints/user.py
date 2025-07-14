@@ -2,10 +2,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.authenticators.common import auth_type_internal
 from app.core.db import get_async_session
 from app.core.user import auth_backend, fastapi_users, current_user
 from app.crud.user import user_crud
-from app.schemas.user import UserRead, UserUpdate
+from app.schemas.user import UserRead, UserUpdate, UserCreate
 from app.core.user import current_superuser
 
 router = APIRouter()
@@ -16,6 +17,13 @@ router.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="/auth/jwt",
     tags=["auth"],
+)
+
+router.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+    dependencies=[Depends(current_superuser), Depends(auth_type_internal)],
 )
 
 users_router = fastapi_users.get_users_router(
@@ -29,6 +37,7 @@ for route in users_router.routes:
         route.dependencies.append(Depends(current_user))
     else:
         route.dependencies.append(Depends(current_superuser))
+        route.dependencies.append(Depends(auth_type_internal))
 
 router.include_router(
     users_router,

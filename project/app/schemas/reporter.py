@@ -8,4 +8,4 @@ class Ping(BaseModel):
     timestamp: datetime
     computer: str
     activeUser: Optional[str] = None
-    idleTime: Optional[float] = None
+    eventType: str
