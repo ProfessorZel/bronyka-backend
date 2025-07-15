@@ -35,3 +35,6 @@ watchfiles
 websockets
 ldap3
 pytimeparse
+google_auth_oauthlib
+gspread
+password-strength

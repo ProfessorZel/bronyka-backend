@@ -5,9 +5,9 @@ from typing import Optional, Union, Any
 
 from fastapi_users.db import BaseUserDatabase
 from fastapi_users.password import PasswordHelperProtocol
-from starlette import status
 
-from app.core import authenticators
+from app.core import authenticators, security
+from app.core.authenticators.common import AuthType
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.crud.group import group_crud
@@ -15,7 +15,7 @@ from app.models.user import User
 from app.schemas.group import Group
 from app.schemas.user import UserCreate
 from app.schemas.user import UserUpdate
-from fastapi import Depends, Request, HTTPException
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import (
     BaseUserManager,
@@ -69,34 +69,27 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def validate_password(
             self, password: str, user: Union[UserCreate, User]
     ) -> None:
-        if len(password) < 3:
-            raise InvalidPasswordException(reason="Слишком короткий пароль")
+        if settings.AUTH_REQURE_STRONGPASS and not security.check_password(password):
+            raise InvalidPasswordException(reason="Не надежный пароль")
+
         if user.email in password:
             raise InvalidPasswordException(
                 reason="Email в пароле не лучшее решение!"
             )
 
-    # Переопределим корутину для действия после успешной регистрации юзера
-    async def on_after_register(
-            self, user: User, request: Optional[Request] = None
-    ):
-        # Вместо print можно настроить отправку письма, например
-        print(f"Пользователь {user.email} зарегистрирован!")
-
     async def authenticate(
             self, credentials: OAuth2PasswordRequestForm
     ) -> Optional[models.UP]:
-        if credentials is None:
-            logging.error("AUTH: No credentials")
-            return None
-
-        login = None
-        if settings.AUTH_METHOD == "INTERNAL":
+        if settings.AUTH_METHOD == AuthType.INTERNAL:
             return await super().authenticate(credentials)
-        if settings.AUTH_METHOD == "DEVMAP":
+
+        if settings.AUTH_METHOD == AuthType.DEVMAP:
             login, fio, group_dns = authenticators.devmap_search(credentials)
-        elif settings.AUTH_METHOD == "LDAP":
+        elif settings.AUTH_METHOD == AuthType.LDAP:
             login, fio, group_dns = authenticators.ldap_search(credentials)
+        else:
+            logging.error("AUTH: Unknown authentication method")
+            return None
 
         if login is None:
             logging.error("AUTH: Failed")
@@ -125,18 +118,26 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         try:
             user = await self.get_by_email(login)
         except UserNotExists:
-            user = await self.create(
-                UserCreate(
-                    email=login,
-                    is_active=True,
-                    is_superuser=False,
-                    password=secrets.token_urlsafe(32),
-                    fio=fio,
+            try:
+                # legacy mapping
+                user = await self.get_by_email(login + settings.LDAP_EMAIL_SUFFIX)
+                await self.update(UserUpdate(email=login), user, True)
+            except UserNotExists:
+                user = await self.create(
+                    UserCreate(
+                        email=login,
+                        is_active=True,
+                        is_superuser=False,
+                        password=secrets.token_urlsafe(32),
+                        fio=fio,
+                    )
                 )
-            )
+        if not user.is_active:
+            logging.error("AUTH: Account disabled")
+            return None
 
         if user.is_superuser != super_user or user.group_id != group_id:
-            user = await self.update(UserUpdate(is_superuser=super_user, group_id=group_id, fio=fio), user, False)
+            user = await self.update(UserUpdate(is_superuser=super_user, group_id=group_id), user, False)
 
         return user
 

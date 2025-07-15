@@ -4,18 +4,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ${DATA_FOLDER}/fastapi.db:/usr/src/app/data/fastapi.db
+      - ./data/:/usr/src/app/data/
       - ./project/alembic/versions:/usr/src/app/alembic/versions
-      - ${DATA_FOLDER}/uploads:/usr/src/app/uploads
+      - ./config:/usr/src/app/config
     ports:
       - ${PUBLIC_PORT}:${PUBLIC_PORT}
-    environment:
-      # ${...} - параметры извлекаемые из .env файла
-      - SECRET_KEY=${SECRET_KEY}
-      - FIRST_SUPERUSER_EMAIL=${FIRST_SUPERUSER_EMAIL}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
-      - DENY_CANCEL_AFTER_MINUTES_USED=${DENY_CANCEL_AFTER_MINUTES_USED}
-      - AUTH_TOKEN_LIFETIME_SECONDS=${AUTH_TOKEN_LIFETIME_SECONDS}
-      - BACKDATE_RESERVATION_ALLOWED_SECONDS=${BACKDATE_RESERVATION_ALLOWED_SECONDS}
-      - MAX_RESERVATION_DURATION_MINUTES=${MAX_RESERVATION_DURATION_MINUTES}
-      - TZ=${TZ}

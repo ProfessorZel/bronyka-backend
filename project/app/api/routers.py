@@ -8,6 +8,8 @@ from app.api.endpoints import (
     files_router,
     group_router,
     reporter_router,
+    google_sheets_router,
+    config_router
 )
 
 main_router = APIRouter()
@@ -27,3 +29,7 @@ main_router.include_router(files_router, prefix="/api/files", tags=["Files"])
 main_router.include_router(group_router, prefix="/api/groups", tags=["Groups"])
 
 main_router.include_router(reporter_router, prefix="/api/reporters", tags=["Reporters"])
+
+main_router.include_router(google_sheets_router, prefix="/api/googlesheets", tags=["GoogleSheets"])
+
+main_router.include_router(config_router, prefix="/api/config", tags=["Config"])

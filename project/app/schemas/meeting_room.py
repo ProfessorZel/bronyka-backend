@@ -34,8 +34,6 @@ class MeetingRoomCreate(MeetingRoom):
 class MeetingRoomDB(MeetingRoomCreate):
     id: int
 
-    # Укажем FastAPI, что он может стерилизовать объёкт базы данных,
-    # а не только словарь или json
     class Config:
         from_attributes = True
 

@@ -10,7 +10,7 @@ from app.core.user import current_superuser
 
 router = APIRouter()
 # Настройки
-UPLOAD_DIR = Path("uploads").resolve()
+UPLOAD_DIR = Path("data/uploads").resolve()
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 FILENAME_PREFIX_LENGTH = 8  # Длина префикса в символах

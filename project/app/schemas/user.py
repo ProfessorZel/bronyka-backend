@@ -17,6 +17,6 @@ class UserCreate(schemas.BaseUserCreate):
     fio: Optional[str]
 
 class UserUpdate(schemas.BaseUserUpdate):
-    email: str
-    fio: Optional[str]
-    group_id: Optional[int]
+    email: Optional[str] = None
+    fio: Optional[str] = None
+    group_id: Optional[int] = None

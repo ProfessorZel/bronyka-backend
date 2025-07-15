@@ -21,8 +21,4 @@ RUN pip install -r requirements.txt
 COPY . .
 ENV DATABASE_URL sqlite+aiosqlite:///./data/fastapi.db
 ENV TZ Europe/Moscow
-ENV AUTH_TOKEN_LIFETIME_SECONDS 86400
-ENV DENY_CANCEL_AFTER_MINUTES_USED 10
-ENV BACKDATE_RESERVATION_ALLOWED_SECONDS 300
-ENV MAX_RESERVATION_DURATION_MINUTES 1440
 CMD sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PUBLIC_PORT}"

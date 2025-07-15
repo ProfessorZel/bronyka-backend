@@ -6,3 +6,5 @@ from .audit import router as audit_router
 from .files import router as files_router
 from .group import router as group_router
 from .reporter import router as reporter_router
+from .googlesheets import router as google_sheets_router
+from .config import router as config_router
