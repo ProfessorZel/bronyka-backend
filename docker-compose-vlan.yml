@@ -10,3 +10,10 @@ services:
     ports:
       - ${PUBLIC_PORT}:${PUBLIC_PORT}
     restart: always
+    networks:
+      vlan:
+        ipv4_address: ${MACVLAN_IP}
+
+networks:
+  vlan:
+    external: true
