@@ -1,6 +1,5 @@
 # app/core/config.py
 import secrets
-import uuid
 import os
 from enum import Enum
 
@@ -24,7 +23,7 @@ class Settings(BaseSettings):
     backdate_reservation_allowed_seconds: int = 300
     max_reservation_duration_minutes: int = 1440
 
-    AUTH_METHOD: AuthType = "DEVMAP"
+    AUTH_METHOD: AuthType = AuthType.INTERNAL
 
     AUTH_REQURE_STRONGPASS: bool = True
 

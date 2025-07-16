@@ -13,7 +13,7 @@ class AuditEvent(Base):
     __tablename__ = "auditevent"  # Ensure table name is defined
 
     # Convert all columns to SQLAlchemy 2.x style
-    id: Mapped[int] = mapped_column(primary_key=True)
+    #id: Mapped[int] = mapped_column(primary_key=True)
     time: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     description: Mapped[str] = mapped_column(Text(1000))
     user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"), nullable=True)

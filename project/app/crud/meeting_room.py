@@ -11,15 +11,15 @@ from app.models.meeting_room import MeetingRoom
 class CRUDMeetingRoom(CRUDBase):
 
     # Преобразуем функцию в методы класса
-    async def get_room_id_by_name(
+    async def get_room_by_name(
         # указываем параметр self, либо декоратор @staticmethod
         self,
         room_name: str,
         session: AsyncSession,
-    ) -> Optional[int]:
+    ) -> Optional[MeetingRoom]:
         # Получаем объект класса Result
         db_room_id = await session.execute(
-            select(MeetingRoom.id).where(MeetingRoom.name == room_name)
+            select(MeetingRoom).where(MeetingRoom.name == room_name)
         )
         # Извлекаем из него конкретное значение
         db_room_id = db_room_id.scalars().first()
@@ -40,5 +40,5 @@ class CRUDMeetingRoom(CRUDBase):
 
 # Объект CRUD наследуем уже не от CRUDBase, а от
 # CRUDMeetingRoom, чтобы был доступен дополнительный
-# метод get_room_id_by_name
+# метод get_room_by_name
 meeting_room_crud = CRUDMeetingRoom(MeetingRoom)

@@ -15,7 +15,7 @@ class GroupRoomPermission(Base):
     __tablename__ = "grouproompermission"
 
     # Convert all columns to SQLAlchemy 2.x style
-    id: Mapped[int] = mapped_column(primary_key=True)
+    #id: Mapped[int] = mapped_column(primary_key=True)
     max_future_reservation: Mapped[timedelta] = mapped_column(Interval)
 
     meetingroom_id: Mapped[int] = mapped_column(Integer, ForeignKey("meetingroom.id"))

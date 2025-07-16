@@ -1,4 +1,4 @@
-from typing import Any
+import logging
 
 from fastapi import HTTPException
 from starlette import status
@@ -6,12 +6,9 @@ from starlette import status
 from app.core.config import settings, AuthType
 
 
-def auth_type_internal(
-):
-    async def auth_type_internal_dependency(*args: Any, **kwargs: Any):
-        if settings.AUTH_METHOD != AuthType.INTERNAL:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail = f"Эта операция запрещена когда IdP равен {settings.AUTH_METHOD}")
-        return None
-
-    return auth_type_internal_dependency
+def auth_type_internal():
+    logging.warn(f"CHECK {settings.AUTH_METHOD} != {AuthType.INTERNAL}")
+    if settings.AUTH_METHOD != AuthType.INTERNAL:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail = f"Эта операция запрещена когда IdP равен {settings.AUTH_METHOD}")
+    return None

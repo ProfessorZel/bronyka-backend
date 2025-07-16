@@ -11,7 +11,7 @@ class Reservation(Base):
     __tablename__ = "reservation"
 
     # Corrected column definitions using Annotated style
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    #id: Mapped[int] = mapped_column(Integer, primary_key=True)
     from_reserve: Mapped[DateTime] = mapped_column(DateTime)
     to_reserve: Mapped[DateTime] = mapped_column(DateTime)
     meetingroom_id: Mapped[int] = mapped_column(Integer, ForeignKey("meetingroom.id"))

@@ -2,9 +2,8 @@
 
 # Все классы и функции для асинхронной работы
 # находятся в модуле sqlalchemy.ext.asyncio
-from sqlalchemy import Integer, Column
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, declared_attr
+from sqlalchemy.orm import declarative_base, sessionmaker, declared_attr, Mapped, mapped_column
 
 from app.core.config import settings
 
@@ -14,7 +13,7 @@ class PreBase:
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
 
 Base = declarative_base(cls=PreBase)
