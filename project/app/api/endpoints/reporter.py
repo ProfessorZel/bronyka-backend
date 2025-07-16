@@ -27,14 +27,16 @@ async def post_ping_event(
 ):
     logging.info(f"Ping: {ping}")
     meeting_room = await check_meeting_room_exists_by_name(ping.computer, session)
-    try:
-        user = await manager.get_by_email(ping.activeUser)
-    except UserNotExists:
-        raise HTTPException(status_code=404, detail=f"No such user: {ping.activeUser}")
+    user = None
+    if ping.activeUser is not None:
+        try:
+            user = await manager.get_by_email(ping.activeUser)
+        except UserNotExists:
+            raise HTTPException(status_code=404, detail=f"No such user: {ping.activeUser}")
 
     await activity_crud.create(
         Activity(
-            user_id=user.id,
+            user_id=user.id if user else None,
             meetingroom_id=meeting_room.id,
             computer_time=ping.timestamp,
         ),
@@ -57,7 +59,7 @@ async def list_reports(
         pings.append(Ping(
                 timestamp=ping.computer_time,
                 computer=ping.meetingroom.name,
-                activeUser=ping.user.fio,
+                activeUser=ping.user.fio if ping.user else None,
                 eventType=str(ping.received_at_time)
             )
         )
