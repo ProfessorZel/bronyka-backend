@@ -1,5 +1,6 @@
 # app/api/endpoints/reporter.py
 import logging
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_users.exceptions import UserNotExists
@@ -7,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators import check_meeting_room_exists_by_name
 from app.core.db import get_async_session
-from app.core.user import UserManager, get_user_manager
+from app.core.user import UserManager, get_user_manager, current_superuser
 from app.crud.activity import activity_crud
 from app.models.activity import Activity
 from app.schemas.reporter import Ping
@@ -39,4 +40,27 @@ async def post_ping_event(
         ),
         session=session
     )
+
+@router.get(
+    "/",
+    summary="Список пингов",
+    response_model=List[Ping],
+    response_description="Список пингов",
+    dependencies=[Depends(current_superuser)],
+)
+async def list_reports(
+    session: AsyncSession = Depends(get_async_session),
+):
+    ping_list = await activity_crud.get_multi(session)
+    pings = []
+    for ping in ping_list:
+        pings.append(Ping(
+                timestamp=ping.computer_time,
+                computer=ping.meetingroom.name,
+                activeUser=ping.user.fio,
+                eventType=str(ping.received_at_time)
+            )
+        )
+    return pings
+
 
