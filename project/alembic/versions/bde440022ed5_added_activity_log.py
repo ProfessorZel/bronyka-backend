@@ -22,7 +22,7 @@ def upgrade() -> None:
     sa.Column('received_at_time', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('computer_time', sa.DateTime(), nullable=False),
     sa.Column('meetingroom_id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['meetingroom_id'], ['meetingroom.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
