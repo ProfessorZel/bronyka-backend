@@ -12,7 +12,7 @@ class MeetingRoom(BaseModel):
     icon: Optional[str] = Field(None, description="название файла иконки")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Переговорная комната #1",
                 "description": "Просторная комната на 40 человек. ",

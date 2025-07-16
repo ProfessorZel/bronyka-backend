@@ -1,8 +1,9 @@
 # app/crud/reservation.py
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import and_, between, or_, select, delete
+from sqlalchemy import and_, between, or_, select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -137,6 +138,33 @@ class CRUDReservation(CRUDBase):
             )
         reservations = reservations.unique().scalars().all()
         return reservations
+
+    async def get_reservations_interval_for_user_today(
+            self, user_id: int,
+            from_time: datetime,
+            to_time: datetime,
+            session: AsyncSession,
+    ) -> tuple[datetime | None, datetime | None]:
+        # Рассчитываем временные границы текущего дня
+
+        # Выполняем запрос для получения агрегированных данных
+        result = await session.execute(
+            select(
+                func.min(Reservation.from_reserve),
+                func.max(Reservation.to_reserve)
+            )
+            .where(
+                Reservation.user_id == user_id,
+                Reservation.from_reserve >= from_time,
+                Reservation.to_reserve < to_time
+            )
+        )
+
+        # Извлекаем результат (одна строка с двумя значениями)
+        row = result.all()[0]
+
+        # Возвращаем (None, None) если данных нет, иначе (min, max)
+        return (row[0], row[1]) if row else (None, None)
 
     async def get_reservations_current(
         self, session: AsyncSession,

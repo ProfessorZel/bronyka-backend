@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     LDAP_ADMIN_GROUP: str = "CN=admins,DC=example,DC=com"
     LDAP_EMAIL_SUFFIX: str = "@example.com"
 
-    GOOGLE_SERVICE_ACCOUNT_FILE: str = "secret.json"
+    GOOGLE_SERVICE_ACCOUNT_FILE: str = "config/service_account_secret.json"
 
     class Config:
         env_file = ".env"

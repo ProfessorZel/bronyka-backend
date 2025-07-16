@@ -8,7 +8,7 @@ class AccessRequestMeta(BaseModel):
     instructions: str = Field(None)
 
 # Запрос на добавление новой таблицы
-class AddSpreadsheetTable(BaseModel):
+class ValidateSpreadsheet(BaseModel):
     url: str
 
 # Запрос на добавление новой таблицы
@@ -16,3 +16,10 @@ class SpreadsheetInfo(BaseModel):
     url: str
     title: str
     sheets: list[str]
+
+
+class ConfigSpreadsheet(BaseModel):
+    url: str
+    title: str
+    sheets: list[str]
+

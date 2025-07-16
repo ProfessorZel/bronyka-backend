@@ -1,5 +1,4 @@
 import re
-from functools import lru_cache
 
 import gspread
 from fastapi import Depends, HTTPException
@@ -122,8 +121,6 @@ def get_google_sheets_editor(
     Dependency factory для создания экземпляра GoogleSheetsEditor
     с кэшированием на уровне приложения
     """
-
-    @lru_cache(maxsize=1)
     def _get_cached_editor() -> GoogleSheetsEditor:
         """Создает и кэширует экземпляр редактора"""
         try:
@@ -145,22 +142,3 @@ async def get_google_editor(
 ) -> GoogleSheetsEditor:
     """FastAPI Dependency для получения редактора таблиц"""
     return editor
-
-
-# Dependency для получения редактируемой таблицы
-async def get_editable_spreadsheet(
-        url: str,
-        editor: GoogleSheetsEditor = Depends(get_google_editor)
-) -> gspread.Spreadsheet:
-    """FastAPI Dependency для получения таблицы"""
-    try:
-        return editor.get_editable_spreadsheet(url)
-    except GoogleSheetsAccessError as e:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": "Доступ к таблице запрещен",
-                "message": str(e),
-                "service_account": editor.get_service_account_email()
-            }
-        )

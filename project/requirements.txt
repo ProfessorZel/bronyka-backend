@@ -38,3 +38,4 @@ pytimeparse
 google_auth_oauthlib
 gspread
 password-strength
+fastapi-utilities

@@ -6,6 +6,6 @@ services:
     volumes:
       - ./data/:/usr/src/app/data/
       - ./project/alembic/versions:/usr/src/app/alembic/versions
-      - ./config:/usr/src/app/config
+      - ./config/:/usr/src/app/config/
     ports:
       - ${PUBLIC_PORT}:${PUBLIC_PORT}
