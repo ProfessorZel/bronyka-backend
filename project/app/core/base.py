@@ -1,4 +1,4 @@
 # app/core/base.py
 """Импорты класса Base и всех моделей для Alembic."""
 from app.core.db import Base  # noqa
-from app.models import MeetingRoom, Reservation, User, AuditEvent, Group, Activity # noqa
+from app.models import MeetingRoom, Reservation, User, AuditEvent, Group, Activity, TimesheetSetting # noqa

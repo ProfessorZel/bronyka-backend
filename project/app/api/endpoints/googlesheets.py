@@ -1,16 +1,35 @@
 # app/api/endpoints/googlesheets.py
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from gspread import WorksheetNotFound
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
+from app.core.db import get_async_session
 from app.core.user import current_superuser
+from app.crud.timesheet_settings import timesheet_setting_crud
+from app.models import TimesheetSetting
 from app.schemas.googlesheets import SpreadsheetInfo, ValidateSpreadsheet, AccessRequestMeta, ConfigSpreadsheet
 from app.timecard.google_spreadsheet import get_google_editor, GoogleSheetsEditor, \
     GoogleSheetsAccessError
 
 router = APIRouter()
 
+@router.get(
+"/",
+    response_model=List[ConfigSpreadsheet],
+    dependencies=[Depends(current_superuser)],
+    summary="Список сконфигурированных листов",
+)
+async def get_list(
+    editor: GoogleSheetsEditor = Depends(get_google_editor)
+):
+    return AccessRequestMeta(
+        service_account_email=editor.get_service_account_email(),
+        instructions="Необходимо предоставить доступ к этому сервис аккаунту к книге, с уровнем доступа редактор."
+    )
 
 @router.get(
     "/meta",
@@ -65,10 +84,29 @@ async def validate_access_by_url(
 async def add_sheet_config(
     req: ConfigSpreadsheet,
     editor: GoogleSheetsEditor = Depends(get_google_editor),
+    session: AsyncSession = Depends(get_async_session)
 ):
     try:
         spreadsheet = editor.get_editable_spreadsheet(req.url)
         worksheet = spreadsheet.worksheet(req.sheet)
+        try:
+            await timesheet_setting_crud.create(
+                TimesheetSetting(
+                    spreadsheet_url=spreadsheet.url,
+                    worksheet=worksheet.title,
+                    with_service_account=editor.get_service_account_email()
+                ),
+                session=session,
+            )
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Такая пара книги и листа уже существует",
+                    "message": "Такая пара книги и листа уже существует " + str(e),
+                }
+            )
+
         return Response(content="Создано успешно")
     except WorksheetNotFound as e:
         raise HTTPException(

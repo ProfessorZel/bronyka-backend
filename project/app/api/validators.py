@@ -37,16 +37,6 @@ async def check_meeting_room_exists_by_name(
     return meeting_room
 
 # Корутина, которая проверяет, существует ли объект в БД с таким ID
-async def check_user_exists_by_email(
-    email: str, session: AsyncSession
-) -> User:
-    # Получаем объект из БД по ID
-    user = await user_crud.get_user_by_email(email, session)
-    if user is None:
-        raise HTTPException(status_code=404, detail=f"Пользователь не найден: {email}")
-    return user
-
-# Корутина, которая проверяет, существует ли объект в БД с таким ID
 async def check_meeting_room_exists(
     meeting_room_id: int, session: AsyncSession
 ) -> MeetingRoom:

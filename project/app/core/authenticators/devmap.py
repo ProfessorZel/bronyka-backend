@@ -28,12 +28,12 @@ def devmap_search(credentials: OAuth2PasswordRequestForm) -> (str, str, list[str
         }
     }
     if credentials.username not in usermap:
-        logging.error("DEVMAP AUTH: No entries found")
+        logging.info("DEVMAP AUTH: No entries found")
         return None, None, None
 
     user = usermap[credentials.username]
     if credentials.password != user["password"]:
-        logging.error("DEVMAP AUTH: Invalid password")
+        logging.info("DEVMAP AUTH: Invalid password")
         return None, None, None
 
     return user["email"], user["fio"], user["groups"]

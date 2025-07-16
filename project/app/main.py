@@ -1,4 +1,5 @@
 # app/main.py
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -23,8 +24,10 @@ app = FastAPI(
     description=settings.app_description,
     version=settings.app_version,
     redoc_url=None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
+logging.root.setLevel(logging.INFO)
 
 # Подключаем роутер
 app.include_router(main_router)

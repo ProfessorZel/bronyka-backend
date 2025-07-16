@@ -69,7 +69,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def validate_password(
             self, password: str, user: Union[UserCreate, User]
     ) -> None:
-        if settings.AUTH_REQURE_STRONGPASS and not security.check_password(password):
+        if not settings.AUTH_REQURE_STRONGPASS:
+            return
+
+        if not security.check_password(password):
             raise InvalidPasswordException(reason="Не надежный пароль")
 
         if user.email in password:
@@ -92,7 +95,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             return None
 
         if login is None:
-            logging.error("AUTH: Failed")
+            logging.warn("AUTH: Failed auth")
             return None
 
         # теперь назначим права администратора и распределим по группам
@@ -133,7 +136,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                     )
                 )
         if not user.is_active:
-            logging.error("AUTH: Account disabled")
+            logging.warn("AUTH: Account disabled")
             return None
 
         if user.is_superuser != super_user or user.group_id != group_id:

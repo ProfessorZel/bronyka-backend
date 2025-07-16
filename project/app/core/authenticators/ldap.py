@@ -36,7 +36,7 @@ def ldap_search(credentials: OAuth2PasswordRequestForm) -> (str, str, list[str])
         )
 
         if not search_conn.entries:
-            logging.error("LDAP AUTH: No entries found")
+            logging.info("LDAP AUTH: No entries found")
             return None, None, None
 
         user_entry = search_conn.entries[0]
@@ -45,17 +45,17 @@ def ldap_search(credentials: OAuth2PasswordRequestForm) -> (str, str, list[str])
         # Аутентификация пользователя
         auth_conn = Connection(server, user=user_dn, password=credentials.password)
         if not auth_conn.bind():
-            logging.error("LDAP AUTH: Binding failed")
+            logging.info("LDAP AUTH: Binding failed")
             return None, None, None
         # Извлечение данных пользователя
         login = getattr(user_entry, settings.LDAP_LOGIN_ATTRIBUTE, None).value
         fio = getattr(user_entry, settings.LDAP_FIO_ATTRIBUTE, None).value
         if not login:
-            logging.error("LDAP AUTH: Email attribute not found")
+            logging.info("LDAP AUTH: Email attribute not found")
             return None, None, None
 
 
-        logging.error(f"LDAP AUTH: Login is '{login}'")
+        logging.info(f"LDAP AUTH: Login is '{login}'")
 
         if 'memberOf' in user_entry:
             group_dns = user_entry['memberOf'].value
@@ -64,7 +64,6 @@ def ldap_search(credentials: OAuth2PasswordRequestForm) -> (str, str, list[str])
 
         return login, fio, group_dns
     except LDAPException as e:
-        print(f"LDAP error: {e}")
         logging.error(f"LDAP AUTH: {e}")
         return None, None, None
     finally:
