@@ -1,11 +1,11 @@
 # app/api/endpoints/googlesheets.py
 
-import gspread
 from fastapi import APIRouter, Depends, HTTPException
+from gspread import WorksheetNotFound
+from starlette.responses import Response
 
 from app.core.user import current_superuser
-from app.schemas.googlesheets import SpreadsheetInfo, ValidateSpreadsheet, AccessRequestMeta
-from app.timecard.filltimecard import WorkScheduleFiller
+from app.schemas.googlesheets import SpreadsheetInfo, ValidateSpreadsheet, AccessRequestMeta, ConfigSpreadsheet
 from app.timecard.google_spreadsheet import get_google_editor, GoogleSheetsEditor, \
     GoogleSheetsAccessError
 
@@ -51,22 +51,27 @@ async def validate_access_by_url(
 
 @router.post(
     "/config",
-    response_model=SpreadsheetInfo,
+    response_model=None,
     dependencies=[Depends(current_superuser)],
     summary="Запрос на добавление новой таблицы в работу",
     response_description="Успешная проверка доступа и добавление таблицы",
 )
 async def add_sheet_config(
+    req: ConfigSpreadsheet,
     editor: GoogleSheetsEditor = Depends(get_google_editor),
 ):
     try:
-        spreadsheet = editor.get_editable_spreadsheet("https://docs.google.com/spreadsheets/d/1ZcwFEJkBQPV9XLxn-VRu6lx4fwu6gITxJVOVta3vXHw/edit?gid=1035045900#gid=1035045900")
-        worksheet = spreadsheet.worksheet(spreadsheet.worksheets()[0].title)
-        filler = WorkScheduleFiller(worksheet)
-
-        filler.fill_schedule("Измайлова Диана Дмитриевна", "21.07.25", "01:00", "12:00")
-
-        return None
+        spreadsheet = editor.get_editable_spreadsheet(req.url)
+        worksheet = spreadsheet.worksheet(req.sheet)
+        return Response(content="Создано успешно")
+    except WorksheetNotFound as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Не существует такого листа",
+                "message": str(e),
+            }
+        )
     except GoogleSheetsAccessError as e:
         raise HTTPException(
             status_code=400,

@@ -20,6 +20,5 @@ class SpreadsheetInfo(BaseModel):
 
 class ConfigSpreadsheet(BaseModel):
     url: str
-    title: str
-    sheets: list[str]
+    sheet: str
 
