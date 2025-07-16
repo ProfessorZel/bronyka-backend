@@ -23,6 +23,7 @@ async def get_meta(
 ):
     return AccessRequestMeta(
         service_account_email=editor.get_service_account_email(),
+        instructions="Необходимо предоставить доступ к этому сервис аккаунту к книге, с уровнем доступа редактор."
     )
 
 @router.post(
@@ -37,7 +38,12 @@ async def validate_access_by_url(
     editor: GoogleSheetsEditor = Depends(get_google_editor)
 ):
     try:
-        editor.get_editable_spreadsheet(req.url)
+        spreadsheet = editor.get_editable_spreadsheet(req.url)
+        return SpreadsheetInfo(
+            url=req.url,
+            title=spreadsheet.title,
+            sheets=[sheet.title for sheet in spreadsheet.worksheets()]
+        )
     except GoogleSheetsAccessError as e:
         raise HTTPException(
             status_code=400,
@@ -69,7 +75,7 @@ async def add_sheet_config(
             status_code=400,
             detail={
                 "error": "Не существует такого листа",
-                "message": str(e),
+                "message": "Не существует такого листа " + str(e),
             }
         )
     except GoogleSheetsAccessError as e:
