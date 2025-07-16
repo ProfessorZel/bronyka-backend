@@ -58,6 +58,7 @@ async def create_new_meeting_room(
 )
 async def get_all_meeting_rooms(
     session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_user),
 ):
     """
     Список комнат для переговоров:
@@ -65,7 +66,10 @@ async def get_all_meeting_rooms(
     - **name** = Название комнаты
     - **description** = Описание комнаты
     """
-    get_rooms = await meeting_room_crud.get_multi(session)
+    if user.is_superuser:
+        get_rooms = await meeting_room_crud.get_multi(session)
+    else:
+        get_rooms = await meeting_room_crud.get_allowed_rooms(group_id=user.group_id, session=session)
     return get_rooms
 
 
