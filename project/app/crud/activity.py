@@ -1,8 +1,9 @@
-# app/crud/reservation.py
-from typing import Optional
+# app/crud/activity.py
+from datetime import timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.functions import now
 
 from app.crud.base import CRUDBase
 from app.models import User
@@ -10,5 +11,19 @@ from app.models.activity import Activity
 
 
 class CRUDActivity(CRUDBase):
-    pass
+    async def get_active_user_for_meeting_room(
+            self,
+            meetingroom_id: int,
+            lookback_interval: timedelta,
+            session: AsyncSession,
+    ) -> User:
+        pings = await session.execute(
+            select(Activity).where(
+                Activity.computer_time > now() - lookback_interval,
+                Activity.meetingroom_id == meetingroom_id,
+                Activity.user_id != None,
+            ).order_by(Activity.computer_time.desc())
+        )
+        ping = pings.unique().scalars().first()
+        return ping.user if ping else None
 activity_crud = CRUDActivity(Activity)

@@ -1,4 +1,5 @@
 # app/api/validators.py
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -9,8 +10,9 @@ from app.core.config import settings
 from app.crud.group import group_crud
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
+from app.crud.timesheet_settings import timesheet_setting_crud
 from app.crud.user import user_crud
-from app.models import Group
+from app.models import Group, TimesheetSetting
 from app.models import GroupRoomPermission
 from app.models import MeetingRoom, Reservation, User
 
@@ -33,6 +35,7 @@ async def check_meeting_room_exists_by_name(
     # Получаем объект из БД по ID
     meeting_room = await meeting_room_crud.get_room_by_name(room_name, session)
     if meeting_room is None:
+        logging.warn(f"Unknown room name: {room_name}")
         raise HTTPException(status_code=404, detail=f"Переговорка не найдена: {room_name}")
     return meeting_room
 
@@ -65,6 +68,16 @@ async def check_group_exists(
     if user is None:
         raise HTTPException(status_code=404, detail=f"Группа не найдена ID: {group_id}")
     return user
+
+# Корутина, которая проверяет, существует ли объект в БД с таким ID
+async def check_timesheet_setting_exists(
+    timesheet_settings_id: int, session: AsyncSession
+) -> TimesheetSetting:
+    # Получаем объект из БД по ID
+    timesheet_setting = await timesheet_setting_crud.get(obj_id=timesheet_settings_id, session=session)
+    if timesheet_setting is None:
+        raise HTTPException(status_code=404, detail=f"Timesheet с ID: {timesheet_settings_id}")
+    return timesheet_setting
 
 
 

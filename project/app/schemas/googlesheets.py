@@ -12,13 +12,18 @@ class ValidateSpreadsheet(BaseModel):
     url: str
 
 # Запрос на добавление новой таблицы
-class SpreadsheetInfo(BaseModel):
+class ValidateSpreadsheetResult(BaseModel):
     url: str
     title: str
     sheets: list[str]
 
 
 class ConfigSpreadsheet(BaseModel):
-    url: str
-    sheet: str
+    spreadsheet_url: str
+    worksheet: str
 
+class ConfigSpreadsheetDB(BaseModel):
+    id: int
+    spreadsheet_url: str
+    worksheet: str
+    service_account_email: str

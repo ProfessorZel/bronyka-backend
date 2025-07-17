@@ -1,5 +1,6 @@
 # app/api/endpoints/reporter.py
 import logging
+from datetime import timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,7 +19,6 @@ router = APIRouter()
 @router.post(
     "/ping",
     summary="Получает ping от компьютера",
-    response_description="Созданная группа",
 )
 async def post_ping_event(
     ping: Ping,
@@ -32,6 +32,7 @@ async def post_ping_event(
         try:
             user = await manager.get_by_email(ping.activeUser)
         except UserNotExists:
+            logging.info(f"User {ping.activeUser} not found.")
             raise HTTPException(status_code=404, detail=f"No such user: {ping.activeUser}")
 
     await activity_crud.create(
@@ -51,9 +52,17 @@ async def post_ping_event(
     dependencies=[Depends(current_superuser)],
 )
 async def list_reports(
+    meetingroom_id: int = None,
+    lookback: timedelta = timedelta(minutes=5),
     session: AsyncSession = Depends(get_async_session),
 ):
-    ping_list = await activity_crud.get_multi(session)
+    if meetingroom_id is None:
+        ping_list = await activity_crud.get(session)
+    else:
+        ping_list = await activity_crud.get_active_user_for_meeting_room(
+            meetingroom_id=meetingroom_id,
+            lookback_interval=lookback,
+            session=session)
     pings = []
     for ping in ping_list:
         pings.append(Ping(
