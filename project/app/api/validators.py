@@ -132,6 +132,18 @@ async def check_reservation_permissions(
                             detail=f"Группа {group.name} не может бронировать {meetingroom.name} больше чем на {perm.max_future_reservation} вперед")
 
 
+async def check_reservation_exist(
+    reservation_id: int, session: AsyncSession
+) -> Reservation:
+    reservation = await reservation_crud.get(
+        # Для лучшего понимания, можно передавать параметры по ключу
+        obj_id=reservation_id,
+        session=session,
+    )
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Бронь не найдена!")
+
+    return reservation
 
 async def check_reservation_before_edit(
     reservation_id: int, session: AsyncSession, user: User

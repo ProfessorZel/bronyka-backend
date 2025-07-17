@@ -1,6 +1,6 @@
 # app/models/reservation.py
 
-from sqlalchemy import DateTime, ForeignKey, Integer
+from sqlalchemy import DateTime, ForeignKey, Integer, Boolean
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from app.core.db import Base
@@ -20,6 +20,8 @@ class Reservation(Base):
     # Corrected relationships with Mapped[]
     meetingroom: Mapped["MeetingRoom"] = relationship("MeetingRoom", viewonly=True, lazy="joined")
     user: Mapped["User"] = relationship("User", viewonly=True, lazy="joined")
+
+    confirmed_activity: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
 
     def __repr__(self) -> str:
         return f"(id: {self.id}) компьютер '{self.meetingroom.name}' с {self.from_reserve} по {self.to_reserve} для пользователя '{self.user.fio}'"

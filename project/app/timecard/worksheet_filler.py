@@ -2,6 +2,8 @@ import logging
 
 import gspread
 
+from app.timecard.header_parser import UserHeader, deserialize_name_login, serialize_name_login
+
 
 class WorkScheduleFiller:
     def __init__(self, sheet: gspread.Worksheet):
@@ -15,39 +17,36 @@ class WorkScheduleFiller:
         """
         self.sheet: gspread.Worksheet = sheet
 
-    def fill_schedule(self, full_name: str, date_str, plan_arrival, plan_departure):
+    def fill_schedule(self, user_col: int, date_row: int, plan_arrival, plan_departure):
         """
         Заполняет расписание для указанного пользователя и даты
 
-        :param full_name: ФИО пользователя для поиска в шапке
-        :param date_str: Дата в формате строки (как в таблице)
+        :param user_col: Позиция первой ячейки группы ячеек пользователя
+        :param date_row: Строка с датой для пользователя
         :param plan_arrival: Время прихода по плану (например "09:00")
         :param plan_departure: Время ухода по плану (например "18:00")
         """
-        # Поиск столбца пользователя
-        start_col = self._find_user_column(full_name)
 
-        # Поиск строки с датой
-        date_row = self._find_date_row(date_str)
 
         # Запись данных
-        self._update_cells(start_col, date_row, plan_arrival, plan_departure)
+        self._update_cells(user_col, date_row, plan_arrival, plan_departure)
 
-    def _find_user_column(self, full_name: str) -> int:
+    def update_header(self, user_col: int, fio: str, login: str):
+        self.sheet.update_cell(1, user_col, serialize_name_login(fio, login))
+
+    def users(self) -> dict[UserHeader, int]:
         """Находит начальный столбец для указанного ФИО"""
         # Получаем значения только нужных ячеек в первой строке
         # Диапазон: столбцы B (2) до последнего расчетного (self.last_fio_col)
         col_values = self.sheet.row_values(1)
 
         # Перебираем блоки с шагом 5
+        users = dict[UserHeader, int]()
         for block_index in range(1, len(col_values), 5):
-            if block_index < len(col_values) and col_values[block_index] == full_name:
-                # Возвращаем реальный номер столбца (B=2, G=7, L=12 и т.д.)
-                return 1 + block_index
+                users[deserialize_name_login(col_values[block_index])] = block_index + 1
+        return users
 
-        raise ValueError(f"ФИО '{full_name}' не найдено в шапке таблицы")
-
-    def _find_date_row(self, date_str) -> int:
+    def find_date_row(self, date_str) -> int:
         """Находит строку с указанной датой"""
         # Получаем все даты из столбца A в указанном диапазоне
         dates = self.sheet.col_values(1)

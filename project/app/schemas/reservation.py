@@ -85,3 +85,16 @@ class ReservationRoomDB(ReservationRoomBase):
     # разрешим сериализацию объектов из БД
     class Config:
         from_attributes = True
+
+
+# Pydantic-схема для валидации объектов из БД,
+# но нельзя наследоваться от ReservationRoomCreate, т.к. унаследуется и валидаторы
+# и при получении старых объектов из БД, у нас будет ошибка валидации по дате:
+# старые записи по дате будут уже меньше текущей даты
+class ReservationRoomDBUpdateInternal(ReservationRoomBase):
+    id: int
+    meetingroom_id: int
+    meetingroom: Optional[MeetingRoomDB]
+    user_id: Optional[int]
+    confirmed_activity: bool
+

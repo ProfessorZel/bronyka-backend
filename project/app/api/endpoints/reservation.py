@@ -1,13 +1,14 @@
 # app/api/endpoints/reservation.py
 from fastapi import APIRouter, Depends, Path
 from fastapi import HTTPException
+from fastapi_users.exceptions import UserNotExists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators import (
     check_meeting_room_exists,
     check_reservation_intersections,
     check_reservation_before_edit,
-    check_user_exists, check_reservation_permissions,
+    check_user_exists, check_reservation_permissions, check_reservation_exist,
 )
 from app.core.db import get_async_session
 from app.core.user import current_user, current_superuser, get_user_manager
@@ -107,9 +108,6 @@ async def get_all_reservation(
     current: bool = False,
     session: AsyncSession = Depends(get_async_session),
 ):
-    """
-    (Могут воспользоваться только суперпользователи)
-    """
     if current:
         reservations = await reservation_crud.get_reservations_current(session)
     else:
@@ -169,7 +167,7 @@ async def update_reservation(
         title="ID резервирования",
         description="Любое положительное число",
     ),
-    obj_in: ReservationRoomUpdate,
+    reservation_edit: ReservationRoomUpdate,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
     user_manager = Depends(get_user_manager),
@@ -184,46 +182,39 @@ async def update_reservation(
       Если указано, то пользователь должен быть суперпользователем.
       Если не указано, то бронь изменяется для текущего пользователя.
     """
-    meeting_room = await check_meeting_room_exists(obj_in.meetingroom_id, session)
 
-    # Определяем, для какого пользователя изменяем бронь
-    reservation_user = user
-    if obj_in.user_id is not None:
-        # Проверяем, является ли текущий пользователь суперпользователем
-        if not user.is_superuser:
-            raise HTTPException(
-                status_code=403,
-                detail="Только суперпользователь может изменять бронирования других пользователей"
-            )
-        # Проверяем существование пользователя, для которого изменяем бронь
-        await check_user_exists(user_id=obj_in.user_id, session=session)
-        reservation_user = await user_manager.get(obj_in.user_id)
+    if reservation_edit.user_id is not None:
+        raise HTTPException(
+            status_code=501,
+            detail="Редактирование не поддерживает смену пользователя"
+        )
 
     # Проверяем, что объект бронирования уже существует
-    reservation_before = await check_reservation_before_edit(
-        reservation_id, session, reservation_user
+    reservation_before = await check_reservation_exist(
+        reservation_id, session
     )
 
     if not user.is_superuser:
         await check_reservation_permissions(
-            to_reserve=obj_in.to_reserve,
-            meetingroom=meeting_room,
-            user=reservation_user,
+            to_reserve=reservation_edit.to_reserve,
+            meetingroom=reservation_before.meetingroom,
+            user=reservation_before.user,
             session=session
         )
 
     # Проверяем, что нет пересечений с другими бронированиями
     await check_reservation_intersections(
         # Новое время бронирования, распаковываем на ключевые аргументы
-        from_reserve=obj_in.from_reserve,
-        to_reserve=obj_in.to_reserve,
+        from_reserve=reservation_edit.from_reserve,
+        to_reserve=reservation_edit.to_reserve,
         reservation_id=reservation_id,
         meetingroom_id=reservation_before.meetingroom_id,
-        user_id=reservation_user.id,
+        user_id=reservation_before.user_id,
         session=session,
     )
+
     reservation = await reservation_crud.update(
-        db_obj=reservation_before, obj_in=obj_in, session=session
+        db_obj=reservation_before, obj_in=reservation_edit, session=session
     )
 
     # создаем аудит

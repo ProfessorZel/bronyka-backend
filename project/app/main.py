@@ -7,15 +7,17 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routers import main_router
+from app.job.autocancel import run_autocancel
 from app.core.config import settings
-from app.timecard.job import run_fill_timecards
+from app.job.fill_timecards import run_fill_timecards
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     # --- startup ---
     print("Starting lifespan")
     run_fill_timecards()
+    run_autocancel()
     yield
     # --- shutdown ---
 

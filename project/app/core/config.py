@@ -42,6 +42,15 @@ class Settings(BaseSettings):
 
     GOOGLE_SERVICE_ACCOUNT_FILE: str = "config/service_account_secret.json"
 
+    cron_timesheet_enabled: bool = True
+    cron_autocancel_enabled: bool = True
+
+    # за сколько секунд назад проверять что была активность
+    autocancel_lookback_activity_seconds: int = 1200
+    # через сколько времени после начала бронировать отменить бронь,
+    # в случае отсутствия активности
+    autocancel_after_no_activity_after_start_seconds: int = 900
+
     class Config:
         env_file = ".env"
 

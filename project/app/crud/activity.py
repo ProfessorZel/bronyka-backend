@@ -42,4 +42,21 @@ class CRUDActivity(CRUDBase):
         )
         ping = pings.unique().scalars().all()
         return ping
+
+    async def confirm_activty(
+            self,
+            user_id: int,
+            meetingroom_id: int,
+            lookback_interval: timedelta,
+            session: AsyncSession,
+    ) -> bool:
+        pings = await session.execute(
+            select(Activity).where(
+                Activity.computer_time >= now() - lookback_interval,
+                Activity.meetingroom_id == meetingroom_id,
+                Activity.user_id == user_id,
+            ).limit(1)
+        )
+        ping = pings.unique().scalars().first()
+        return True if ping else False
 activity_crud = CRUDActivity(Activity)
