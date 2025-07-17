@@ -28,13 +28,13 @@ def run_autocancel():
         for current_reservation in current_reservations:
             try:
                 if current_reservation.confirmed_activity:
-                    logging.info(f"Reservation {current_reservation.id} has confirmed activity, skipping...")
+                    logging.info(f"Reservation {current_reservation} has confirmed activity, skipping...")
                     continue
                 if current_reservation.to_reserve < datetime.now():
-                    logging.info(f"Skipping processing reservation {current_reservation.id} is already finished")
+                    logging.info(f"Skipping processing reservation {current_reservation} is already finished")
                     continue
                 if current_reservation.from_reserve > datetime.now() - timedelta(seconds=settings.autocancel_after_no_activity_after_start_seconds):
-                    logging.info(f"Skipping processing reservation {current_reservation.id} as time from start is not enough to trigger autocancel")
+                    logging.info(f"Skipping processing reservation {current_reservation} as time from start is not enough to trigger autocancel")
                     continue
 
                 is_active = asyncio.run(activity_crud.confirm_activty(user_id=current_reservation.user_id,
