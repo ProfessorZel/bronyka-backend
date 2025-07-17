@@ -59,7 +59,7 @@ async def list_reports(
     if meetingroom_id is None:
         ping_list = await activity_crud.get_multi(session=session)
     else:
-        ping_list = await activity_crud.get_active_user_for_meeting_room(
+        ping_list = await activity_crud.get_latest_for_meeting_room(
             meetingroom_id=meetingroom_id,
             lookback_interval=lookback,
             session=session)
