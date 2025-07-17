@@ -9,13 +9,13 @@ class AccessRequestMeta(BaseModel):
 
 # Запрос на добавление новой таблицы
 class ValidateSpreadsheet(BaseModel):
-    url: str
+    spreadsheet_url: str
 
 # Запрос на добавление новой таблицы
 class ValidateSpreadsheetResult(BaseModel):
-    url: str
+    spreadsheet_url: str
     title: str
-    sheets: list[str]
+    worksheets: list[str]
 
 
 class ConfigSpreadsheet(BaseModel):

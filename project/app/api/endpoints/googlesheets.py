@@ -45,11 +45,11 @@ async def validate_access_by_url(
     editor: GoogleSheetsEditor = Depends(get_google_editor)
 ):
     try:
-        spreadsheet = editor.get_editable_spreadsheet(req.url)
+        spreadsheet = editor.get_editable_spreadsheet(req.spreadsheet_url)
         return ValidateSpreadsheetResult(
-            url=req.url,
+            spreadsheet_url=spreadsheet.url,
             title=spreadsheet.title,
-            sheets=[sheet.title for sheet in spreadsheet.worksheets()]
+            worksheets=[sheet.title for sheet in spreadsheet.worksheets()]
         )
     except GoogleSheetsAccessError as e:
         raise HTTPException(
@@ -75,8 +75,8 @@ async def add_sheet_config(
     session: AsyncSession = Depends(get_async_session)
 ):
     try:
-        spreadsheet = editor.get_editable_spreadsheet(req.url)
-        worksheet = spreadsheet.worksheet(req.sheet)
+        spreadsheet = editor.get_editable_spreadsheet(req.spreadsheet_url)
+        worksheet = spreadsheet.worksheet(req.worksheet)
         try:
             result = await timesheet_setting_crud.create(
                 TimesheetSetting(
