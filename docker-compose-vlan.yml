@@ -9,6 +9,9 @@ services:
     networks:
       vlan:
         ipv4_address: ${MACVLAN_IP}
+      internalbr:
+        ipv4_address: 10.123.0.2
+
   web:
     hostname: web
     build: ./project
@@ -19,6 +22,15 @@ services:
       - ./data/:/usr/src/app/data/
       - ./project/alembic/versions:/usr/src/app/alembic/versions
       - ./config/:/usr/src/app/config/
+    networks:
+      internalbr:
+        ipv4_address: 10.123.0.3
+
 networks:
   vlan:
     external: true
+  internalbr:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.123.0.0/24

@@ -1,6 +1,7 @@
 # nginx.conf.template
 server {
     listen         80;
+    server_name _;
     return 301 https://$host$request_uri;
 }
 
@@ -10,7 +11,7 @@ upstream bronyka {
 
 server {
     listen 443 ssl;
-    server_name ${DOMAIN};
+    server_name _;
 
     ssl_certificate /etc/ssl/certs/${SSL_CERT_NAME};
     ssl_certificate_key /etc/ssl/certs/${SSL_KEY_NAME};
