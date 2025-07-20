@@ -11,7 +11,7 @@
 * [Docker Desktop](https://www.docker.com/products/docker-desktop/) - служба контейнеризации
 
 # Сборка проекта
-Для сборки проекта необходимо выполнить команду в корне проекта (рядом с docker-compose.yml), это создаст контейнер на основании [Dockerfile](./project/Dockerfile)
+Для сборки проекта необходимо выполнить команду в корне проекта (рядом с docker-compose.yml), это создаст контейнер на основании [Dockerfile](nginx/Dockerfile)
 ```shell
 docker build .\project\
 ```

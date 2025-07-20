@@ -1,12 +1,23 @@
 services:
+  nginx:
+    build: ./nginx
+    restart: always
+    volumes:
+      - ./certs:/etc/ssl/certs
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: example.com
+      SSL_CERT_NAME: server.crt
+      SSL_KEY_NAME: server.key
   web:
+    hostname: web
     build: ./project
+    restart: always
     env_file:
       - .env
     volumes:
       - ./data/:/usr/src/app/data/
       - ./project/alembic/versions:/usr/src/app/alembic/versions
       - ./config/:/usr/src/app/config/
-    ports:
-      - ${PUBLIC_PORT}:${PUBLIC_PORT}
-    restart: always

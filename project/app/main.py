@@ -26,7 +26,7 @@ app = FastAPI(
     description=settings.app_description,
     version=settings.app_version,
     redoc_url=None,
-    lifespan=lifespan,
+    lifespan=lifespan
 )
 
 logging.root.setLevel(logging.INFO)
@@ -34,9 +34,9 @@ logging.root.setLevel(logging.INFO)
 # Подключаем роутер
 app.include_router(main_router)
 
-app.mount("/assets", StaticFiles(directory="/usr/src/app/app/assets"), name="static")
-@app.get("/")
-async def read_index():
-    return FileResponse('/usr/src/app/app/index.html')
+# app.mount("/assets", StaticFiles(directory="/usr/src/app/app/assets"), name="static")
+# @app.get("/")
+# async def read_index():
+#     return FileResponse('/usr/src/app/app/index.html')
 
 

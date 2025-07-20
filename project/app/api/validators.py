@@ -22,7 +22,7 @@ async def check_name_duplicate(room_name: str, session: AsyncSession, previous_r
     # и вторым параметром передаём сессию в CRUD функцию
     room_id = await meeting_room_crud.get_room_by_name(room_name, session)
     # Если такой объект уже есть в базе - вызвать ошибку
-    if room_id is not None and room_id != previous_room_id:
+    if room_id is not None and room_id.id != previous_room_id:
         raise HTTPException(
             status_code=422,
             detail="Такая переговорная комната уже существует!",
