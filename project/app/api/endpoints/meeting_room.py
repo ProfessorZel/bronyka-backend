@@ -2,6 +2,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.user import current_superuser, current_user
 from app.crud.audit import audit_crud
@@ -66,7 +68,7 @@ async def get_all_meeting_rooms(
     - **name** = Название комнаты
     - **description** = Описание комнаты
     """
-    if user.is_superuser:
+    if user.is_superuser or settings.bypass_group_perms:
         get_rooms = await meeting_room_crud.get_multi(session)
     else:
         get_rooms = await meeting_room_crud.get_allowed_rooms(group_id=user.group_id, session=session)
