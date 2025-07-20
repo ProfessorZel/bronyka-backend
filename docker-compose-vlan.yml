@@ -10,7 +10,7 @@ services:
       vlan:
         ipv4_address: ${MACVLAN_IP}
       internalbr:
-        ipv4_address: 10.123.0.2
+        ipv4_address: 10.${SUBNET}.0.2
 
   web:
     hostname: web
@@ -24,7 +24,7 @@ services:
       - ./config/:/usr/src/app/config/
     networks:
       internalbr:
-        ipv4_address: 10.123.0.3
+        ipv4_address: 10.${SUBNET}.0.3
 
 networks:
   vlan:
@@ -33,4 +33,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 10.123.0.0/24
+        - subnet: 10.${SUBNET}.0.0/24
