@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import and_, between, or_, select, delete, func
+from sqlalchemy import and_, between, or_, select, delete, func, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -164,6 +164,47 @@ class CRUDReservation(CRUDBase):
 
         # Возвращаем (None, None) если данных нет, иначе (min, max)
         return (row[0], row[1]) if row else (None, None)
+
+    async def get_reservations_interval_for_user_today_advanced(self,
+                                                                user_id: int,
+                                                                from_time: datetime,
+                                                                session: AsyncSession):
+        # Рассчитываем границы дня
+        start_of_day = datetime.combine(from_time.date(), datetime.min.time())
+        end_of_day = start_of_day + timedelta(days=1)
+
+        # Определяем условия для бронирований, активных в течение дня
+        overlaps_condition = and_(
+            Reservation.from_reserv < end_of_day,
+            Reservation.to_reserv > start_of_day
+        )
+
+        # Корректируем времена бронирований под границы дня
+        adjusted_from = case(
+            [
+                (Reservation.from_reserv < start_of_day, start_of_day),
+            ],
+            else_=Reservation.from_reserv
+        )
+
+        adjusted_to = case(
+            [
+                (Reservation.to_reserv > end_of_day, end_of_day - timedelta(microseconds=1)),
+            ],
+            else_=Reservation.to_reserv
+        )
+
+        # Формируем запрос
+        result = await session.execute(
+            select(
+                func.min(adjusted_from),
+                func.max(adjusted_to)
+            ).filter(
+                Reservation.user_id == user_id,
+                overlaps_condition
+            )
+        )
+        return result.first()
 
     async def get_reservations_current(
         self, session: AsyncSession,

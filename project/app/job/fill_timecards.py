@@ -57,7 +57,7 @@ def run_fill_timecards():
                                 user = candidate_user
                                 break
                     else:
-                        user = asyncio.run(user_crud.get_user_by_email(user_header.login))
+                        user = asyncio.run(user_crud.get_user_by_email(user_header.login, session))
 
                     if user is None:
                         logging.warn(
