@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     # в случае отсутствия активности
     autocancel_after_no_activity_after_start_seconds: int = 900
 
+    bypass_group_perms: bool = False
+
     class Config:
         env_file = ".env"
 

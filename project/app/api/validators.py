@@ -115,6 +115,9 @@ async def check_reservation_permissions(
         user: User,
         session: AsyncSession,
 ) -> None:
+    if settings.bypass_group_perms:
+        return
+
     group: Group = await group_crud.get(obj_id=user.group_id, session=session)
     if group is None:
         raise HTTPException(status_code=422, detail="Вам не назначена ни одна группа, бронирование запрещено.")

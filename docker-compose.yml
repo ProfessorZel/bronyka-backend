@@ -7,10 +7,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      DOMAIN: example.com
-      SSL_CERT_NAME: server.crt
-      SSL_KEY_NAME: server.key
+    env_file:
+      - .env
   web:
     hostname: web
     build: ./project

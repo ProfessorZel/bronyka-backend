@@ -4,13 +4,8 @@ services:
     restart: always
     volumes:
       - ./certs:/etc/ssl/certs
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      DOMAIN: example.com
-      SSL_CERT_NAME: server.crt
-      SSL_KEY_NAME: server.key
+    env_file:
+      - .env
     networks:
       vlan:
         ipv4_address: ${MACVLAN_IP}
@@ -24,7 +19,6 @@ services:
       - ./data/:/usr/src/app/data/
       - ./project/alembic/versions:/usr/src/app/alembic/versions
       - ./config/:/usr/src/app/config/
-
 networks:
   vlan:
     external: true
